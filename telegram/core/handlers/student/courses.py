@@ -55,7 +55,8 @@ async def get_courses(message: types.Message, state: FSMContext):
 async def callback_detail(call: types.CallbackQuery):
     # TODO task is to send teacher questionnaires (or links to them)
     text = call.message.text
-    if (text.find('Курс находится в корзине') != -1) or ((text.find('Курс уже выбран')) != -1):
+    if (text.find('Курс находится в корзине') != -1) or ((text.find('Курс уже выбран')) != -1) or \
+            (text.find('Выбран тариф') != -1):
         await call.message.edit_text(f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
                                      parse_mode="HTML")
     else:
@@ -71,7 +72,8 @@ async def callback_standard(call: types.CallbackQuery):
         await call.message.edit_text(f"{text1}Выбран тариф ""Стандарт""\n"
                                      f"{text2}" ,parse_mode="HTML")
     else:
-        await call.message.edit_text(f"{text}\nВыбран тариф ""Стандарт""\n", parse_mode="HTML")
+        await call.message.edit_text(f"{text}\nВыбран тариф ""Стандарт""\n", parse_mode="HTML",
+                                     reply_markup=all_keyboards["student_detail"]())
 
 async def callback_pro(call: types.CallbackQuery):
     # TODO task is to add information about the selected tariff to the database and put it in the basket
@@ -82,4 +84,5 @@ async def callback_pro(call: types.CallbackQuery):
         await call.message.edit_text(f"{text1}Выбран тариф ""ПРО""\n"
                                      f"{text2}", parse_mode="HTML")
     else:
-        await call.message.edit_text(f"{text}\nВыбран тариф ""ПРО""", parse_mode="HTML")
+        await call.message.edit_text(f"{text}\nВыбран тариф ""ПРО""", parse_mode="HTML",
+                                     reply_markup=all_keyboards["student_detail"]())
