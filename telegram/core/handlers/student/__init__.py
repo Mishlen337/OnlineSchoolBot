@@ -19,12 +19,12 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(basket.get_basket, regexp="Корзина",
                                 state="student_main")
     dp.register_callback_query_handler(
-        personal_lessons.show_event_description,
+        personal_lessons.show_lesson_description,
         CallBackFilter("show_desc"),
         state="student_main"
     )
     dp.register_callback_query_handler(
-        personal_lessons.add_event,
+        personal_lessons.add_lesson,
         CallBackFilter("add"),
         state="student_main"
     )
