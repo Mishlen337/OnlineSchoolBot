@@ -7,6 +7,7 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     WEBHOOK_URL: str
     TELEGRAM_SECRET: str
+    HOST_PORT: int
 
     class Config:
         env_file = "../.env"
