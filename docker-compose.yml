@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  bot:
+    container_name: ege_bot
+    build: .
+    environment:
+      TZ: "Europe/Moscow"
+    env_file:
+      - .env
+    ports:
+      - "${HOST_PORT}:5000"
+    restart: unless-stopped
