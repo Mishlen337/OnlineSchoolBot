@@ -1,4 +1,5 @@
 sample2.xlsx
+*.7z
 ### DB volume ###
 postgres_data/
 redis-db/
