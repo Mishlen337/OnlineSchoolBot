@@ -2,8 +2,9 @@ from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types.reply_keyboard import ReplyKeyboardRemove
-from core.keyboards.all_keyboards import all_keyboards
 from aiogram.utils import deep_linking
+
+from core.keyboards import student_keyboards
 
 
 async def commands_handler(message: types.Message, state: FSMContext):
@@ -11,11 +12,11 @@ async def commands_handler(message: types.Message, state: FSMContext):
         case "start":
             args = message.get_args()
             if args == "employee":
-                await message.answer(f"Привет, сотрудник")
+                await message.answer("Привет, сотрудник")
                 await state.set_state("employee_main")
             else:
                 await message.answer("Здесь будет приветственное слово и \
-                    регистрация", reply_markup=all_keyboards["student_menu"]())
+                    регистрация", reply_markup=student_keyboards.all_keyboards["menu"]())
                 # TODO registration
                 await state.set_state("student_main")
         case "stop":

@@ -4,7 +4,7 @@ from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 
 from core.utils.messages import PERSONAL_LESSON_MESSAGE
-from core.keyboards.all_keyboards import all_keyboards
+from core.keyboards.student_keyboards import all_keyboards
 
 temp_personal_lessons_available = [
     {"lesson_id": "0", "teacher_name": "Кристина Мячина", "lesson_title": "Химия",
@@ -43,9 +43,9 @@ async def get_lessons(message: types.Message, state: FSMContext):
             if selected:
                 msg_text += "\n<em>Вы записаны на это мероприятие</em>"
             reply_markup = (
-                all_keyboards["add_lesson"](lesson["lesson_id"])
+                all_keyboards["personal_select_with_desc"](lesson["lesson_id"])
                 if not selected
-                else all_keyboards["show_desc"](lesson["lesson_id"])
+                else all_keyboards["personal_desc"](lesson["lesson_id"])
             )
             await message.answer(
                 msg_text,
@@ -75,7 +75,6 @@ async def show_lesson_description(callback: types.CallbackQuery):
 
 async def add_lesson(callback: types.CallbackQuery):
     lesson_id = callback.data.split(":")[1]
-    user_id = callback.from_user.id
     logger.debug(f"Guest {callback.from_user} chose to add {lesson_id}")
     user_selected_lessons = []
     user_list_id = -1
@@ -100,10 +99,9 @@ async def add_lesson(callback: types.CallbackQuery):
         if user_list_id >= 0:
             users_selected_lessons[user_list_id]["selected_lessons"] = user_selected_lessons
         else:
-            users_selected_lessons.append({"tg_id": f"{callback.from_user.id}", "selected_lessons": user_selected_lessons})
+            users_selected_lessons.append({"tg_id": f"{callback.from_user.id}",
+                                           "selected_lessons": user_selected_lessons})
         logger.debug(f"Event {lesson_id} was successfully added by guest {callback.from_user}")
         await callback.message.edit_text(callback.message.text + "\n\nВы выбрали это мероприятие")
-        reply_markup = all_keyboards["show_desc"](f"{lesson_id}")
+        reply_markup = all_keyboards["personal_desc"](f"{lesson_id}")
         await callback.message.edit_reply_markup(reply_markup=reply_markup)
-
-

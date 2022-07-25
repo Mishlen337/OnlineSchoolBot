@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 from loguru import logger
-from core.filters.employee_filters import BoundFilter
+# from core.filters.employee_filters import BoundFilter
 
 
 def setup(dp: Dispatcher):
