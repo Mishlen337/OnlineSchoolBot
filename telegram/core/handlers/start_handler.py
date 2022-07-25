@@ -1,16 +1,23 @@
 from aiogram import types
+from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 from core.keyboards.all_keyboards import all_keyboards
+from aiogram.utils import deep_linking
 
 
 async def commands_handler(message: types.Message, state: FSMContext):
-    match message.text[1:]:
+    match message.get_command()[1:]:
         case "start":
-            await message.answer("Здесь будет приветственное слово и \
-                регистрация", reply_markup=all_keyboards["student_menu"]())
-            # TODO registration
-            await state.set_state("student_main")
+            args = message.get_args()
+            if args == "employee":
+                await message.answer(f"Привет, сотрудник")
+                await state.set_state("employee_main")
+            else:
+                await message.answer("Здесь будет приветственное слово и \
+                    регистрация", reply_markup=all_keyboards["student_menu"]())
+                # TODO registration
+                await state.set_state("student_main")
         case "stop":
             await message.answer(
                 "Вы отключились от бота. \
@@ -26,6 +33,9 @@ async def commands_handler(message: types.Message, state: FSMContext):
             /stop сбросить состояние бота \n\
             /help показать помощь"
             )
+        case "getlink":
+            link = await deep_linking.get_start_link(payload='employee')
+            await message.answer('Ссылка для входа с правами сотрудника\n{}'.format(link))
 
 
 async def base_handler(message: types.Message, state: FSMContext):
