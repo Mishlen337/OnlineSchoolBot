@@ -163,6 +163,11 @@ __pypackages__/
 celerybeat-schedule
 celerybeat.pid
 
+# Backups
+*.zip
+*.7z
+*.rar
+
 # SageMath parsed files
 *.sage.py
 
