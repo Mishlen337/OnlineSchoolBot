@@ -22,8 +22,8 @@ def kb_student_menu():
 def kb_course_select_with_desc():
     kb_student = InlineKeyboardMarkup(row_width=2)
     kb_student.add(
-        InlineKeyboardButton(text="Добавить стандарт", callback_data="standard"),
-        InlineKeyboardButton(text="Добавить ПРО", callback_data="pro"),
+        InlineKeyboardButton(text="Добавить стандарт", callback_data="add_course_standard"),
+        InlineKeyboardButton(text="Добавить ПРО", callback_data="add_course_pro"),
         InlineKeyboardButton(text="Подробнее", callback_data="course_desc")
     )
     return kb_student

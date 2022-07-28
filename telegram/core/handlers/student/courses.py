@@ -2,28 +2,37 @@
 from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
-
+from core.utils.messages import SELECT_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
 
-mathematics = {'id_course': 0,
-               'name_course': 'Математика подготовка к ЕГЭ',
-               'name_subject': 'Математика',
-               'name_teacher': 'Галаган Гомункулич Васильевич',
-               'price_course': '1000 рублей',
+mathematics = {'id': 0,
+               'name': 'Математика подготовка к ЕГЭ',
+               'course_subject_name': 'Математика',
+               'teacher_subject_name': 'Галаган Гомункулич Васильевич',
+               'price_course_standard': '100 рублей',
+               'price_course_pro': '200 рублей',
+               'begin_at': '21.08.2022 в 21:00',
+               'end_at': '28.07.2023',
                'Basket': True,
                'Selected': False}
-physics = {'id_course': 1,
-           'name_course': 'Физика подготовка к ЕГЭ',
-           'name_subject': 'Физика',
-           'name_teacher': 'Калинина биг босс абудаби',
-           'price_course': '12415 рублей',
+physics = {'id': 1,
+           'name': 'Физика подготовка к ЕГЭ',
+           'course_subject_name': 'Физика',
+           'teacher_subject_name': 'Калинина биг босс абудаби',
+           'price_course_standard': '100 рублей',
+           'price_course_pro': '200 рублей',
+           'begin_at': '21.08.2022 в 21:00',
+           'end_at': '28.07.2023',
            'Basket': False,
            'Selected': True}
-informatics = {'id_course': 2,
-               'name_course': 'Информатика подготовка к ЕГЭ',
-               'name_subject': 'Информатика',
-               'name_teacher': 'Измайлов Марат Айратович',
-               'price_course': '10000000 рублей',
+informatics = {'id': 2,
+               'name': 'Информатика подготовка к ЕГЭ',
+               'course_subject_name': 'Информатика',
+               'teacher_subject_name': 'Измайлов Марат Айратович',
+               'price_course_standard': '100 рублей',
+               'price_course_pro': '200 рублей',
+               'begin_at': '21.08.2022 в 21:00',
+               'end_at': '28.07.2023',
                'Basket': False,
                'Selected': False}
 courses = [mathematics, physics, informatics]
@@ -37,18 +46,23 @@ async def get_courses(message: types.Message, state: FSMContext):
     if num_of_courses > 0:
         await message.answer("Сообщение о скидке.")
         for course in courses:
-            Info_course = (f"{course['name_course']}\n"
-                           f"{course['name_subject']}\n"
-                           f"{course['name_teacher']}\n"
-                           f"{course['price_course']}\n")
+            msg_text = SELECT_INFO_COURSE.format(
+                name=course['name'],
+                course_subject_name=course['course_subject_name'],
+                teacher_subject_name=course['teacher_subject_name'],
+                price_course_standard=course['price_course_standard'],
+                price_course_pro=course['price_course_pro'],
+                begin_at=course['begin_at'],
+                end_at=course['end_at']
+            )
             if course['Basket']:
-                await message.answer(f"{Info_course}Курс находится в корзине", parse_mode="HTML",
+                await message.answer(f"{msg_text}Курс находится в корзине", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_desc"]())
             elif course['Selected']:
-                await message.answer(f"{Info_course}Курс уже выбран", parse_mode="HTML",
+                await message.answer(f"{msg_text}Курс уже выбран", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_desc"]())
             else:
-                await message.answer(f"{Info_course}", parse_mode="HTML",
+                await message.answer(f"{msg_text}", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_select_with_desc"]())
     else:
         await message.answer("Курсы отсутствуют.")
@@ -92,4 +106,4 @@ async def callback_pro(call: types.CallbackQuery):
                                      f"{text2}", parse_mode="HTML")
     else:
         await call.message.edit_text(f"{text}\nВыбран тариф ""ПРО""", parse_mode="HTML",
-                                     reply_markup=all_keyboards["student_detail"]())
+                                     reply_markup=all_keyboards["course_desc"]())
