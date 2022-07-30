@@ -15,7 +15,7 @@ temp_personal_lessons_available = [
      "place": "Zoom", "desc": "Занятие по физике"}
 ]
 
-# {"tg_id": "id", "selected_lessons": [selected_lessons_ids]}
+#{"tg_id": "id", "selected_lessons": [selected_lessons_ids]}
 users_selected_lessons = []
 
 
@@ -64,13 +64,22 @@ async def show_lesson_description(callback: types.CallbackQuery):
     """
     lesson_id = callback.data.split(":")[1]
     logger.debug(f"Sending description of event {lesson_id} to user {callback.from_user}")
-
-    temp_id = next(
-        (i for i, item in enumerate(temp_personal_lessons_available) if item['lesson_id'] == f"{lesson_id}"),
-        None)
-    target_lesson = temp_personal_lessons_available[temp_id]
-    await callback.message.answer(
-        target_lesson['lesson_title'] + "\n" + target_lesson["teacher_name"] + "\n" + target_lesson['desc'])
+    user_selected_lessons = []
+    text = callback.message.text + "\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14"
+    if users_selected_lessons:
+        try:
+            temp_id = next(
+                (i for i, item in enumerate(users_selected_lessons) if item["tg_id"] == f"{callback.from_user.id}"),
+                None)
+            user_selected_lessons = users_selected_lessons[temp_id]["selected_lessons"]
+        except:
+            logger.debug(f"Student {callback.from_user} selected 0 personal lessons.")
+    added = lesson_id in user_selected_lessons
+    if added:
+        await callback.message.edit_text(text,parse_mode='HTML')
+    else:
+        reply_markup = all_keyboards["personal_select"](f"{lesson_id}")
+        await callback.message.edit_text(text, reply_markup=reply_markup, parse_mode='HTML')
 
 
 async def add_lesson(callback: types.CallbackQuery):
@@ -102,6 +111,13 @@ async def add_lesson(callback: types.CallbackQuery):
             users_selected_lessons.append({"tg_id": f"{callback.from_user.id}",
                                            "selected_lessons": user_selected_lessons})
         logger.debug(f"Event {lesson_id} was successfully added by guest {callback.from_user}")
-        await callback.message.edit_text(callback.message.text + "\n\nВы выбрали это мероприятие")
-        reply_markup = all_keyboards["personal_desc"](f"{lesson_id}")
-        await callback.message.edit_reply_markup(reply_markup=reply_markup)
+        text = callback.message.text
+        if text.find("https") == -1:
+            await callback.message.edit_text(callback.message.text + "\n\nВы выбрали это мероприятие")
+            reply_markup = all_keyboards["personal_desc"](f"{lesson_id}")
+            await callback.message.edit_reply_markup(reply_markup=reply_markup)
+        else:
+            text1 = text[:text.find('https')]
+            text2 = text[text.find('https'):]
+            await callback.message.edit_text(f"{text1}\nВы выбрали это мероприятие\n"
+                                             f"{text2}", parse_mode="HTML")
