@@ -9,11 +9,11 @@ select c.name as course_name, c.subject_name as course_subject_name,
         join orders as o on ocp.order_id = o.id
         join courses as c on ocp.course_id = c.id
         join employees as e on c.teacher_id = e.id
-where s.tg_id = :tg_id and o.status = 'неоплачено'
+where s.tg_id = :tg_id and o.status = 'неоплачено';
 
 --name: _create_basket
 insert into orders(order_time, student_id) values (:order_time, :student_id)
-returning id
+returning id;
 
 --name: delete_basket
 delete from orders where status = 'неоплачено' and student_id = :student_id
@@ -22,7 +22,7 @@ delete from orders where status = 'неоплачено' and student_id = :stude
 insert into order_course_package(order_id, student_id, course_id, package_name, old_price)
     values (:order_id, :student_id, :course_id, :package_name, :old_price)
 
---name _get_order_id
+--name _get_order_id^
 select o.id from orders as o
     join students as s on o.student_id
 where s.tg_id = :tg_id
