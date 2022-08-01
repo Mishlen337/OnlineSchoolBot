@@ -22,10 +22,7 @@ def setup(dp: Dispatcher):
                                 state="student_main")
     dp.register_callback_query_handler(courses.callback_desc, CallBackFilter("course_desc"),
                                        state="student_main")
-    dp.register_callback_query_handler(courses.callback_standard,
-                                       CallBackFilter("add_course_standard"),
-                                       state="student_main")
-    dp.register_callback_query_handler(courses.callback_pro, CallBackFilter("add_course_pro"),
+    dp.register_callback_query_handler(courses.callback_add_course, CallBackFilter("add_course"),
                                        state="student_main")
     dp.register_pre_checkout_query_handler(basket.checkout_process,
                                            state="student_main")

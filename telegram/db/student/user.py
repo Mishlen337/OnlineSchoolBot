@@ -7,7 +7,7 @@ from db.utils import exceptions
 async def tg_auth(tg_id):
     "Authorizes student when he comes in bot."
     conn = None
-    query = aiosql.from_path("./db/student/sql_files/user.sql", driver_adapter="asyncpg")
+    query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
 
     try:
         conn = await asyncpg.connect(config.DB_URI)
@@ -25,7 +25,7 @@ async def tg_auth(tg_id):
 async def info_init(tg_id, name, patronymic, surname, email, class_num):
     "Initializes information about student"
     conn = None
-    query = aiosql.from_path("./db/student/sql_files/user.sql", driver_adapter="asyncpg")
+    query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
 
     try:
         conn = await asyncpg.connect(config.DB_URI)

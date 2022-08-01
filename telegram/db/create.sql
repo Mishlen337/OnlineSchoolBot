@@ -284,3 +284,8 @@ INSERT or UPDATE
 EXECUTE
   PROCEDURE check_webinar_intersection();
 
+create table if not exists purchased_webinars (
+    webinar_id integer CONSTRAINT fk_webinar REFERENCES webinars(id),
+    student_id integer CONSTRAINT fk_student REFERENCES students(id),
+    primary key(webinar_id, student_id)
+);

@@ -5,43 +5,47 @@ from aiogram.dispatcher.storage import FSMContext
 from core.utils.messages import SELECT_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
 
-from db.student import course
+from db.student import course, order
 from db.utils import exceptions
 
 
 async def get_courses(message: types.Message, state: FSMContext):
     """Answers available courses."""
     logger.debug(f"Student {message.from_user} requests available courses.")
+    course_list = []
     try:
         course_list = await course.get_courses(message.from_user.id)
+        if course_list:
+            await message.answer("Сообщение о скидке.")
+            for crs in course_list:
+                msg_text = SELECT_INFO_COURSE.format(
+                    course_name=crs['course_name'],
+                    subject_name=crs['subject_name'],
+                    teacher_name=crs['teacher_name'],
+                    teacher_patronymic=crs['teacher_patronymic'],
+                    teacher_surname=crs['teacher_surname'],
+                    begin_at=crs['begin_at'].strftime("%d-%m-%Y"),
+                    end_at=crs['end_at'].strftime("%d-%m-%Y"),
+                )
+                match(crs['status']):
+                    case 'неоплачено':
+                        await message.answer(
+                            f"{msg_text}Курс находится в корзине", parse_mode="HTML",
+                            reply_markup=all_keyboards["course_desc"](crs['course_id']))
+                    case 'оплачено':
+                        await message.answer(
+                            f"{msg_text}Курс оплачен", parse_mode="HTML",
+                            reply_markup=all_keyboards["course_desc"](crs['course_id']))
+                    case _:
+                        await message.answer(
+                            f"{msg_text}", parse_mode="HTML",
+                            reply_markup=await all_keyboards["course_select_with_desc"](
+                                crs['course_id']))
+        else:
+            await message.answer("Курсы отсутствуют.")
     except exceptions.ConnectionError:
         await message.answer("Упс. Что то пошло не так")
         return
-
-    num_of_courses = len(course_list)
-    if num_of_courses > 0:
-        await message.answer("Сообщение о скидке.")
-        for course in courses:
-            msg_text = SELECT_INFO_COURSE.format(
-                name=course['name'],
-                course_subject_name=course['course_subject_name'],
-                teacher_subject_name=course['teacher_subject_name'],
-                price_course_standard=course['price_course_standard'],
-                price_course_pro=course['price_course_pro'],
-                begin_at=course['begin_at'],
-                end_at=course['end_at']
-            )
-            if course['Basket']:
-                await message.answer(f"{msg_text}Курс находится в корзине", parse_mode="HTML",
-                                     reply_markup=all_keyboards["course_desc"]())
-            elif course['Selected']:
-                await message.answer(f"{msg_text}Курс уже выбран", parse_mode="HTML",
-                                     reply_markup=all_keyboards["course_desc"]())
-            else:
-                await message.answer(f"{msg_text}", parse_mode="HTML",
-                                     reply_markup=all_keyboards["course_select_with_desc"]())
-    else:
-        await message.answer("Курсы отсутствуют.")
 
 
 async def callback_desc(call: types.CallbackQuery):
@@ -59,27 +63,38 @@ async def callback_desc(call: types.CallbackQuery):
             reply_markup=all_keyboards["course_select_without_desc"]())
 
 
-async def callback_standard(call: types.CallbackQuery):
-    # TODO task is to add information about the selected tariff to the database and put it in the basket
+async def callback_add_course(call: types.CallbackQuery):
+    course_id = call.data.split(":")[1]
+    package_name = call.data.split(":")[2]
+    response_message = None
+
+    try:
+        await order.add_course_package(call.from_user.id, int(course_id), package_name)
+        response_message = f"\n<b>Добавлен в корзину.\n<b>Выбран пакет: </b>{package_name}</b>"
+    except exceptions.NoSuchCoursePackage:
+        await call.message.delete()
+        await call.answer(
+                "Невозможно выбрать пакет этого курса, так как он больше не существует",
+                show_alert=True,
+        )
+        return
+    except exceptions.OrderCourseExists as e:
+        if e.args[0]["status"] == 'оплачен':
+            response_message = f"\n<b>Курс оплачен.\n<b>Выбраный ранее пакет: </b>{e.args[0]['package_name']}</b>"
+        else:
+            response_message = f"\n<b>Курс ранее добавлен в корзину.\n<b>Выбраный ранее пакет: </b>{e.args[0]['package_name']}</b>"
+    except exceptions.ConnectionError:
+        await call.message.answer("Упс. Что то пошло не так")
+        return
+
     text = call.message.text
     if text.find('https') != -1:
         text1 = text[:text.find('https')]
         text2 = text[text.find('https'):]
-        await call.message.edit_text(f"{text1}Выбран тариф ""Стандарт""\n"
-                                     f"{text2}", parse_mode="HTML")
+        await call.message.edit_text(
+            f"{text1}{response_message}"
+            f"{text2}", parse_mode="HTML")
     else:
-        await call.message.edit_text(f"{text}\nВыбран тариф ""Стандарт""\n", parse_mode="HTML",
-                                     reply_markup=all_keyboards["course_desc"]())
-
-
-async def callback_pro(call: types.CallbackQuery):
-    # TODO task is to add information about the selected tariff to the database and put it in the basket
-    text = call.message.text
-    if text.find('https') != -1:
-        text1 = text[:text.find('https')]
-        text2 = text[text.find('https'):]
-        await call.message.edit_text(f"{text1}Выбран тариф ""ПРО""\n"
-                                     f"{text2}", parse_mode="HTML")
-    else:
-        await call.message.edit_text(f"{text}\nВыбран тариф ""ПРО""", parse_mode="HTML",
-                                     reply_markup=all_keyboards["course_desc"]())
+        await call.message.edit_text(
+            f"{text}{response_message}",
+            parse_mode="HTML", reply_markup=all_keyboards["course_desc"](course_id))

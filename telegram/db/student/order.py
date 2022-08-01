@@ -8,7 +8,7 @@ from db.utils import exceptions
 
 async def get_basket_content(tg_id):
     conn = None
-    query = aiosql.from_path("./db/student/sql_files/order.sql", driver_adapter="asyncpg")
+    query = aiosql.from_path("./telegram/db/student/sql_files/order.sql", driver_adapter="asyncpg")
 
     try:
         conn = await asyncpg.connect(config.DB_URI)
@@ -20,10 +20,21 @@ async def get_basket_content(tg_id):
             await conn.close()
         raise exceptions.ConnectionError()
 
+async def purchase_basket(tg_id):
+    conn = None
+    query = aiosql.from_path("./telegram/db/student/sql_files", driver_adapter="asyncpg")
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        student_id = (await query.get_id(conn, tg_id))["id"]
+        await query.purchase_basket(conn, student_id)
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()
 
 async def add_course_package(tg_id, course_id, package_name):
     conn = None
-    query = aiosql.from_path("./db/student/sql_files", driver_adapter="asyncpg")
+    query = aiosql.from_path("./telegram/db/student/sql_files", driver_adapter="asyncpg")
     try:
         conn = await asyncpg.connect(config.DB_URI)
         student_id = (await query.get_id(conn, tg_id))["id"]
@@ -54,7 +65,7 @@ async def add_course_package(tg_id, course_id, package_name):
 
 async def delete_basket(tg_id):
     conn = None
-    query = aiosql.from_path("./db/student/sql_files", driver_adapter="asyncpg")
+    query = aiosql.from_path("./telegram/db/student/sql_files", driver_adapter="asyncpg")
 
     try:
         conn = await asyncpg.connect(config.DB_URI)

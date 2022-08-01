@@ -8,7 +8,8 @@ from db.utils import exceptions
 async def get_available_teachers():
     "Authorizes student when he comes in bot."
     conn = None
-    query = aiosql.from_path("./db/student/sql_files/personal_lesson.sql", driver_adapter="asyncpg")
+    query = aiosql.from_path("./telegram/db/student/sql_files/personal_lesson.sql",
+                             driver_adapter="asyncpg")
 
     try:
         conn = await asyncpg.connect(config.DB_URI)

@@ -12,7 +12,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./db/create.sql:/docker-entrypoint-initdb.d/create.sql
+      - ./telegram/db/create.sql:/docker-entrypoint-initdb.d/create.sql
       - ${DB_PATH}/postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
   
@@ -27,7 +27,7 @@ services:
       - .env
     ports:
       - "${HOST_PORT}:${HOST_PORT}"
-    links:
+    depends_on:
       - postgres
     restart: unless-stopped
 
@@ -39,10 +39,10 @@ services:
       - .env
     volumes:
        - pgadmin:/root/.pgadmin
-       - ./build_files/servers.json:/pgadmin4/servers.json
+       - ./servers.json:/pgadmin4/servers.json
     ports:
       - "${PGADMIN_PORT}:80"
-    links:
+    depends_on:
       - postgres
     restart: unless-stopped
 

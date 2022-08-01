@@ -1,15 +1,18 @@
 
 
 --name: get_personal_lessons_schedule
-select pl.subject_name, e.name, e.patronymic, e.surname, pl.begin_at, pl.end_at, pl.broadcast_link
+select pl.subject_name,
+    e.name as teacher_name, e.patronymic as teacher_patronymic, e.surname as teacher_surname,
+    pl.begin_at, pl.end_at, pl.broadcast_link
     from personal_lessons as pl
         join students as s on pl.student_id = s.id
         join employees as e on pl.teacher_id = e.id
 where s.tg_id = :tg_id and now() < pl.end_at;
 
 --name: get_purchased_webinars_schedule
-select c.name, c.subject_name, w.theme, e.name, e.patronymic, e.surname, w.begin_at, w.end_at,
-       w.broadcast_link
+select c.name as course_name, c.subject_name, w.theme,
+    e.name as teacher_name, e.patronymic as teacher_patronymic, e.surname as teacher_surname,
+    w.begin_at, w.end_at, w.broadcast_link
     from purchased_webinars as pw
         join students as s on pw.student_id = s.id
         join webinars as w on pw.webinar_id = w.id

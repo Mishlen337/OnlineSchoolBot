@@ -5,7 +5,11 @@ from aiogram.types import (
     InlineKeyboardButton
 )
 
+from core.utils import keyboard_utils
+
 all_keyboards = {}
+
+#  basic keyboards
 
 
 def kb_student_menu():
@@ -16,31 +20,6 @@ def kb_student_menu():
         KeyboardButton("Мое расписание"),
         KeyboardButton("Корзина")
     )
-    return kb_student
-
-
-def kb_course_select_with_desc():
-    kb_student = InlineKeyboardMarkup(row_width=2)
-    kb_student.add(
-        InlineKeyboardButton(text="Добавить стандарт", callback_data="add_course_standard"),
-        InlineKeyboardButton(text="Добавить ПРО", callback_data="add_course_pro"),
-        InlineKeyboardButton(text="Подробнее", callback_data="course_desc")
-    )
-    return kb_student
-
-
-def kb_course_select_without_desc():
-    kb_student = InlineKeyboardMarkup(row_width=2)
-    kb_student.add(
-        InlineKeyboardButton(text="Добавить стандарт", callback_data="add_course_standard"),
-        InlineKeyboardButton(text="Добавить ПРО", callback_data="add_course_pro"),
-    )
-    return kb_student
-
-
-def kb_course_desc():
-    kb_student = InlineKeyboardMarkup()
-    kb_student.add(InlineKeyboardButton(text="Подробнее", callback_data="course_desc"))
     return kb_student
 
 
@@ -55,36 +34,53 @@ def kb_menubasket():
     return kb_student
 
 
-def add_personal_desc_to_kb(kb: InlineKeyboardMarkup, lesson_id: str) -> None:
-    kb.add(InlineKeyboardButton(text="Подробнее", callback_data="personal_desc:" + lesson_id))
+#  course keyboards
+
+async def kb_course_select_with_desc(course_id):
+    kb_student = InlineKeyboardMarkup()
+    await keyboard_utils.add_course_packages_to_kb(kb_student, course_id)
+    keyboard_utils.add_course_desc_to_kb(kb_student, course_id)
+    return kb_student
 
 
-def kb_personal_desc(id: str) -> InlineKeyboardMarkup:
+async def kb_course_select_without_desc(kb_student: InlineKeyboardMarkup, course_id: int) -> None:
+    kb_student = InlineKeyboardMarkup()
+    await keyboard_utils.add_course_packages_to_kb(kb_student, course_id)
+    return kb_student
+
+
+def kb_course_desc(course_id):
+    kb_student = InlineKeyboardMarkup()
+    keyboard_utils.add_course_desc_to_kb(kb_student, course_id)
+    return kb_student
+
+#  personal keyboards
+
+
+def kb_personal_desc(teacher_id: int) -> InlineKeyboardMarkup:
     kb_show_desc = InlineKeyboardMarkup()
-    add_personal_desc_to_kb(kb_show_desc, id)
+    keyboard_utils.add_personal_desc_to_kb(kb_show_desc, teacher_id)
     return kb_show_desc
 
 
 def kb_personal_select_with_desc(lesson_id: str) -> InlineKeyboardMarkup:
-    _kb_add_lesson = InlineKeyboardMarkup()
-    _kb_add_lesson.add(InlineKeyboardButton(text="Добавить",
-                                            callback_data="add_personal:" + lesson_id))
-    add_personal_desc_to_kb(_kb_add_lesson, lesson_id)
-    return _kb_add_lesson
+    kb_add_lesson = InlineKeyboardMarkup()
+    keyboard_utils.add_contact_to_kb(kb_add_lesson, lesson_id)
+    keyboard_utils.add_personal_desc_to_kb(kb_add_lesson, lesson_id)
+    return kb_add_lesson
 
 
-def kb_personal_select(lesson_id: str) -> InlineKeyboardMarkup:
-    _kb_add_lesson = InlineKeyboardMarkup()
-    _kb_add_lesson.add(InlineKeyboardButton(text="Добавить",
-                                            callback_data="add_personal:" + lesson_id))
-    return _kb_add_lesson
+def kb_personal_select_without(lesson_id: str) -> InlineKeyboardMarkup:
+    kb_add_lesson = InlineKeyboardMarkup()
+    keyboard_utils.add_contact_to_kb(kb_add_lesson, lesson_id)
+    return kb_add_lesson
 
 
 all_keyboards["menu"] = kb_student_menu
+all_keyboards["menubasket"] = kb_menubasket
 all_keyboards["course_select_without_desc"] = kb_course_select_without_desc
 all_keyboards["course_select_with_desc"] = kb_course_select_with_desc
 all_keyboards["course_desc"] = kb_course_desc
-all_keyboards["menubasket"] = kb_menubasket
 all_keyboards["personal_select_with_desc"] = kb_personal_select_with_desc
 all_keyboards["personal_desc"] = kb_personal_desc
-all_keyboards["personal_select"] = kb_personal_select
+all_keyboards["kb_personal_select_without"] = kb_personal_select_without
