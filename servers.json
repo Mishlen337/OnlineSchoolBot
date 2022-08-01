@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Dockerized",
+            "Group": "Servers",
+            "Port": 5432,
+            "Username": "basic_user",
+            "Host": "online_school_pg",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres"
+        }
+    }
+}

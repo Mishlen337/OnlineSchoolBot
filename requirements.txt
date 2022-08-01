@@ -3,3 +3,5 @@ fastapi==0.78.0
 loguru==0.6.0
 uvicorn==0.18.2
 pydantic~=1.9.1
+aiosql==5.0
+asyncpg==0.26.0

@@ -5,44 +5,20 @@ from aiogram.dispatcher.storage import FSMContext
 from core.utils.messages import SELECT_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
 
-mathematics = {'id': 0,
-               'name': 'Математика подготовка к ЕГЭ',
-               'course_subject_name': 'Математика',
-               'teacher_subject_name': 'Галаган Гомункулич Васильевич',
-               'price_course_standard': '100 рублей',
-               'price_course_pro': '200 рублей',
-               'begin_at': '21.08.2022 в 21:00',
-               'end_at': '28.07.2023',
-               'Basket': True,
-               'Selected': False}
-physics = {'id': 1,
-           'name': 'Физика подготовка к ЕГЭ',
-           'course_subject_name': 'Физика',
-           'teacher_subject_name': 'Калинина биг босс абудаби',
-           'price_course_standard': '100 рублей',
-           'price_course_pro': '200 рублей',
-           'begin_at': '21.08.2022 в 21:00',
-           'end_at': '28.07.2023',
-           'Basket': False,
-           'Selected': True}
-informatics = {'id': 2,
-               'name': 'Информатика подготовка к ЕГЭ',
-               'course_subject_name': 'Информатика',
-               'teacher_subject_name': 'Измайлов Марат Айратович',
-               'price_course_standard': '100 рублей',
-               'price_course_pro': '200 рублей',
-               'begin_at': '21.08.2022 в 21:00',
-               'end_at': '28.07.2023',
-               'Basket': False,
-               'Selected': False}
-courses = [mathematics, physics, informatics]
+from db.student import course
+from db.utils import exceptions
 
 
 async def get_courses(message: types.Message, state: FSMContext):
     """Answers available courses."""
     logger.debug(f"Student {message.from_user} requests available courses.")
-    # TODO send available courses to student
-    num_of_courses = len(courses)
+    try:
+        course_list = await course.get_courses(message.from_user.id)
+    except exceptions.ConnectionError:
+        await message.answer("Упс. Что то пошло не так")
+        return
+
+    num_of_courses = len(course_list)
     if num_of_courses > 0:
         await message.answer("Сообщение о скидке.")
         for course in courses:

@@ -234,3 +234,7 @@ $RECYCLE.BIN/
 
 # SQLite Staff
 *.db
+
+
+# tests
+testdb.py
