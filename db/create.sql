@@ -29,8 +29,8 @@ create table IF not EXISTS employee_subject (
     available boolean,
     individual_price integer,
     primary key (employee_id, subject_name, role),
-    CONSTRAINT check_individual_price((role = personal_teacher and available is not null and individual_price is not null) or
-                                       role !=  personal_teacher and available is null and individual_price is null)
+    CONSTRAINT check_individual_price CHECK((role = 'personal_teacher' and available is not null and individual_price is not null) or
+                                       role != 'personal_teacher' and available is null and individual_price is null)
 );
 
 
@@ -62,7 +62,7 @@ create TABLE if not exists personal_lessons (
     assistant_id integer constraint fk_employee REFERENCES employees(id) on delete set null,
     hometask_status varchar(9) CONSTRAINT hometask_status_check check(hometask_status in ('cдано', 'назначено', 'проверено')),
     CONSTRAINT fk_employee_subject FOREIGN KEY (teacher_id, subject_name, role) REFERENCES employee_subject(employee_id, subject_name, role),
-    CONSTRAINT date_check check (begin_at < end_at);
+    CONSTRAINT date_check check (begin_at < end_at)
 );
 
 create or replace function check_personal_lesson_intersection() returns trigger AS $$
@@ -186,6 +186,7 @@ EXECUTE
   PROCEDURE fill_purchased_webinars();
 
 
+
 create table if not exists order_course_package (
     id serial primary key,
     order_id integer not null,
@@ -197,6 +198,26 @@ create table if not exists order_course_package (
     CONSTRAINT fk_course_package FOREIGN key (course_id, package_name) REFERENCES course_package(course_id, package_name),
     CONSTRAINT student_id_course_id_unique UNIQUE (student_id, course_id)
 );
+
+create or replace function add_course_package_price() returns trigger AS $$
+BEGIN
+    select price from course_package
+        where course_id = new.course_id and package_name = new.package_name
+    limit 1
+    into new.old_price;
+    if new.old_price is null then
+        new.old_price = 0;
+    end if;
+    return new;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_add_course_package_price before
+INSERT
+  ON order_course_package FOR EACH ROW
+EXECUTE
+  PROCEDURE add_course_package_price();
 
 create table if not exists webinars (
     id serial primary key,

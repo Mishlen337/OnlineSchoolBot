@@ -11,6 +11,6 @@ update students set email = :email, name = :name,
                 where tg_id = :tg_id
 )
 
---name get_id^
+--name: get_id^
 select id from students
 where tg_id = :tg_id;

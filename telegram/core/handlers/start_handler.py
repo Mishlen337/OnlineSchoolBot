@@ -5,6 +5,8 @@ from aiogram.types.reply_keyboard import ReplyKeyboardRemove
 from aiogram.utils import deep_linking
 
 from core.keyboards import student_keyboards
+from db.student import user
+from db.utils import exceptions
 
 
 async def commands_handler(message: types.Message, state: FSMContext):
@@ -17,7 +19,15 @@ async def commands_handler(message: types.Message, state: FSMContext):
             else:
                 await message.answer("Здесь будет приветственное слово и \
                     регистрация", reply_markup=student_keyboards.all_keyboards["menu"]())
-                # TODO registration
+
+                try:
+                    await user.tg_auth(message.from_user.id)
+                except exceptions.StudentExists:
+                    pass
+                except exceptions.ConnectionError:
+                    await message.answer("Упс. Что то пошло не так")
+                    return
+
                 await state.set_state("student_main")
         case "stop":
             await message.answer(

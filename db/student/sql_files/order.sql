@@ -19,10 +19,14 @@ returning id;
 delete from orders where status = 'неоплачено' and student_id = :student_id
 
 --name: add_course_package
-insert into order_course_package(order_id, student_id, course_id, package_name, old_price)
-    values (:order_id, :student_id, :course_id, :package_name, :old_price)
+insert into order_course_package(order_id, student_id, course_id, package_name)
+    values (:order_id, :student_id, :course_id, :package_name)
 
---name _get_order_id^
-select o.id from orders as o
-    join students as s on o.student_id
-where s.tg_id = :tg_id
+--name: _get_order_id^
+select id from orders
+where student_id = :student_id
+
+--name: _get_order_course_status^
+select ocp.package_name, o.status from order_course_package as ocp
+    join orders as o on ocp.order_id = o.id
+where o.id = :order_id and ocp.student_id = :student_id and ocp.course_id = :course_id;

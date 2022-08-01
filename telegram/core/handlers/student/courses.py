@@ -4,51 +4,35 @@ from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 
 from core.keyboards.student_keyboards import all_keyboards
-
-mathematics = {'id_course': 0,
-               'name_course': 'Математика подготовка к ЕГЭ',
-               'name_subject': 'Математика',
-               'name_teacher': 'Галаган Гомункулич Васильевич',
-               'price_course': '1000 рублей',
-               'Basket': True,
-               'Selected': False}
-physics = {'id_course': 1,
-           'name_course': 'Физика подготовка к ЕГЭ',
-           'name_subject': 'Физика',
-           'name_teacher': 'Калинина биг босс абудаби',
-           'price_course': '12415 рублей',
-           'Basket': False,
-           'Selected': True}
-informatics = {'id_course': 2,
-               'name_course': 'Информатика подготовка к ЕГЭ',
-               'name_subject': 'Информатика',
-               'name_teacher': 'Измайлов Марат Айратович',
-               'price_course': '10000000 рублей',
-               'Basket': False,
-               'Selected': False}
-courses = [mathematics, physics, informatics]
+from db.student import course
+from db.utils import exceptions
 
 
 async def get_courses(message: types.Message, state: FSMContext):
     """Answers available courses."""
     logger.debug(f"Student {message.from_user} requests available courses.")
-    # TODO send available courses to student
-    num_of_courses = len(courses)
+    try:
+        course_list = await course.get_courses(message.from_user.id)
+    except exceptions.ConnectionError:
+        await message.answer("Упс. Что то пошло не так")
+        return
+
+    num_of_courses = len(course_list)
     if num_of_courses > 0:
         await message.answer("Сообщение о скидке.")
-        for course in courses:
-            Info_course = (f"{course['name_course']}\n"
-                           f"{course['name_subject']}\n"
-                           f"{course['name_teacher']}\n"
-                           f"{course['price_course']}\n")
-            if course['Basket']:
-                await message.answer(f"{Info_course}Курс находится в корзине", parse_mode="HTML",
+        for crs in course_list:
+            info_course = (f"{crs['name_course']}\n"
+                           f"{crs['name_subject']}\n"
+                           f"{crs['name_teacher']}\n"
+                           f"{crs['price_course']}\n")
+            if crs['Basket']:
+                await message.answer(f"{info_course}Курс находится в корзине", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_desc"]())
-            elif course['Selected']:
-                await message.answer(f"{Info_course}Курс уже выбран", parse_mode="HTML",
+            elif crs['Selected']:
+                await message.answer(f"{info_course}Курс уже выбран", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_desc"]())
             else:
-                await message.answer(f"{Info_course}", parse_mode="HTML",
+                await message.answer(f"{info_course}", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_select_with_desc"]())
     else:
         await message.answer("Курсы отсутствуют.")
