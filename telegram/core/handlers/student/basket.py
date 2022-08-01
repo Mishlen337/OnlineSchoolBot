@@ -2,29 +2,41 @@
 from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
-
+from core.utils.messages import BASKET_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
 from core.config import bot, config
 
-mathematics = {'id_course': 0,
-               'name_course': 'Математика подготовка к ЕГЭ',
-               'name_subject': 'Математика',
-               'name_teacher': 'Галаган Гомункулич Васильевич',
-               'price_course': '100 рублей',
+mathematics = {'id': 0,
+               'name': 'Математика подготовка к ЕГЭ',
+               'course_subject_name': 'Математика',
+               'teacher_subject_name': 'Галаган Гомункулич Васильевич',
+               'price_course_standard': '100 рублей',
+               'price_course_pro': '200 рублей',
+               'begin_at': '21.08.2022 в 21:00',
+               'end_at': '28.07.2023',
+               'tariff': True,
                'Basket': True,
                'Selected': False}
-physics = {'id_course': 1,
-           'name_course': 'Физика подготовка к ЕГЭ',
-           'name_subject': 'Физика',
-           'name_teacher': 'Калинина биг босс абудаби',
-           'price_course': '100 рублей',
+physics = {'id': 1,
+           'name': 'Физика подготовка к ЕГЭ',
+           'course_subject_name': 'Физика',
+           'teacher_subject_name': 'Калинина биг босс абудаби',
+           'price_course_standard': '100 рублей',
+           'price_course_pro': '200 рублей',
+           'begin_at': '21.08.2022 в 21:00',
+           'end_at': '28.07.2023',
+           'tariff': False,
            'Basket': True,
            'Selected': False}
-informatics = {'id_course': 2,
-               'name_course': 'Информатика подготовка к ЕГЭ',
-               'name_subject': 'Информатика',
-               'name_teacher': 'Измайлов Марат Айратович',
-               'price_course': '100 рублей',
+informatics = {'id': 2,
+               'name': 'Информатика подготовка к ЕГЭ',
+               'course_subject_name': 'Информатика',
+               'teacher_subject_name': 'Измайлов Марат Айратович',
+               'price_course_standard': '100 рублей',
+               'price_course_pro': '200 рублей',
+               'begin_at': '21.08.2022 в 21:00',
+               'end_at': '28.07.2023',
+               'tariff': True,
                'Basket': True,
                'Selected': False}
 courses_list = [mathematics, physics, informatics]
@@ -39,14 +51,28 @@ async def get_basket(message: types.Message, state: FSMContext):
         await message.answer("Курсы в корзине: ",
                              parse_mode='HTML', reply_markup=all_keyboards["menubasket"]())
         course_prices = []
-        info_course = ''
+        msg_text = ''
         for course in courses_list:
-            price = int(course['price_course'].split(" ")[0])*100
-            course_prices.append(types.LabeledPrice(label=course['name_course'], amount=price))
-            info_course += (f"{course['name_subject']}\n{course['name_teacher']}\n\n")
+            if course['tariff']:
+                price = int(course['price_course_pro'].split(" ")[0]) * 100
+            else:
+                price = int(course['price_course_standard'].split(" ")[0]) * 100
+            course_prices.append(types.LabeledPrice(label=course['name'], amount=price))
+            msg_text += BASKET_INFO_COURSE.format(
+                name=course['name'],
+                course_subject_name=course['course_subject_name'],
+                teacher_subject_name=course['teacher_subject_name'],
+                tariff='Стандарт' if not course['tariff'] else 'ПРО',
+                selected_tariff=course['price_course_standard'] if not course['tariff'] else course['price_course_pro'],
+                begin_at=course['begin_at'],
+                end_at=course['end_at']
+            )
+        msg_text += '<b>Скидка: 10%</b>'
+        await message.answer(text=msg_text, parse_mode='HTML')
+        course_prices.append(types.LabeledPrice(label='Скидка', amount=-100 * 100))
         await bot.send_invoice(message.chat.id,
                                title='Выбранные курсы',
-                               description=info_course,
+                               description=' ',
                                provider_token=config.PAYMENTS_SECRET,
                                currency='rub',
                                prices=course_prices,
@@ -62,7 +88,7 @@ async def checkout_process(pre_checkout_query: types.PreCheckoutQuery):
 
 async def successful_payment(message: types.Message):
     text = message.successful_payment
-    await message.answer(f"Оплата на сумму {text.total_amount//100} {text.currency} прошла успешно",
+    await message.answer(f"Оплата на сумму {text.total_amount // 100} {text.currency} прошла успешно",
                          parse_mode='HTML')
     # TODO delete the purchased course from the database
 

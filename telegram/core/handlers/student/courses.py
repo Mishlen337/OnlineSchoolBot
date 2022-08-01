@@ -2,8 +2,9 @@
 from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
-
+from core.utils.messages import SELECT_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
+
 from db.student import course
 from db.utils import exceptions
 
@@ -20,19 +21,24 @@ async def get_courses(message: types.Message, state: FSMContext):
     num_of_courses = len(course_list)
     if num_of_courses > 0:
         await message.answer("Сообщение о скидке.")
-        for crs in course_list:
-            info_course = (f"{crs['name_course']}\n"
-                           f"{crs['name_subject']}\n"
-                           f"{crs['name_teacher']}\n"
-                           f"{crs['price_course']}\n")
-            if crs['Basket']:
-                await message.answer(f"{info_course}Курс находится в корзине", parse_mode="HTML",
+        for course in courses:
+            msg_text = SELECT_INFO_COURSE.format(
+                name=course['name'],
+                course_subject_name=course['course_subject_name'],
+                teacher_subject_name=course['teacher_subject_name'],
+                price_course_standard=course['price_course_standard'],
+                price_course_pro=course['price_course_pro'],
+                begin_at=course['begin_at'],
+                end_at=course['end_at']
+            )
+            if course['Basket']:
+                await message.answer(f"{msg_text}Курс находится в корзине", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_desc"]())
-            elif crs['Selected']:
-                await message.answer(f"{info_course}Курс уже выбран", parse_mode="HTML",
+            elif course['Selected']:
+                await message.answer(f"{msg_text}Курс уже выбран", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_desc"]())
             else:
-                await message.answer(f"{info_course}", parse_mode="HTML",
+                await message.answer(f"{msg_text}", parse_mode="HTML",
                                      reply_markup=all_keyboards["course_select_with_desc"]())
     else:
         await message.answer("Курсы отсутствуют.")
@@ -76,4 +82,4 @@ async def callback_pro(call: types.CallbackQuery):
                                      f"{text2}", parse_mode="HTML")
     else:
         await call.message.edit_text(f"{text}\nВыбран тариф ""ПРО""", parse_mode="HTML",
-                                     reply_markup=all_keyboards["student_detail"]())
+                                     reply_markup=all_keyboards["course_desc"]())

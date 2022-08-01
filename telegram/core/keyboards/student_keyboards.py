@@ -22,8 +22,8 @@ def kb_student_menu():
 def kb_course_select_with_desc():
     kb_student = InlineKeyboardMarkup(row_width=2)
     kb_student.add(
-        InlineKeyboardButton(text="Добавить стандарт", callback_data="standard"),
-        InlineKeyboardButton(text="Добавить ПРО", callback_data="pro"),
+        InlineKeyboardButton(text="Добавить стандарт", callback_data="add_course_standard"),
+        InlineKeyboardButton(text="Добавить ПРО", callback_data="add_course_pro"),
         InlineKeyboardButton(text="Подробнее", callback_data="course_desc")
     )
     return kb_student
@@ -73,6 +73,13 @@ def kb_personal_select_with_desc(lesson_id: str) -> InlineKeyboardMarkup:
     return _kb_add_lesson
 
 
+def kb_personal_select(lesson_id: str) -> InlineKeyboardMarkup:
+    _kb_add_lesson = InlineKeyboardMarkup()
+    _kb_add_lesson.add(InlineKeyboardButton(text="Добавить",
+                                            callback_data="add_personal:" + lesson_id))
+    return _kb_add_lesson
+
+
 all_keyboards["menu"] = kb_student_menu
 all_keyboards["course_select_without_desc"] = kb_course_select_without_desc
 all_keyboards["course_select_with_desc"] = kb_course_select_with_desc
@@ -80,3 +87,4 @@ all_keyboards["course_desc"] = kb_course_desc
 all_keyboards["menubasket"] = kb_menubasket
 all_keyboards["personal_select_with_desc"] = kb_personal_select_with_desc
 all_keyboards["personal_desc"] = kb_personal_desc
+all_keyboards["personal_select"] = kb_personal_select

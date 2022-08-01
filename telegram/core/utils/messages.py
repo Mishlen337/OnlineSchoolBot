@@ -3,8 +3,7 @@ PERSONAL_LESSON_MESSAGE = '''<b>Преподаватель: {teacher_name}</b>
 Название занятия: {lesson_title}
 Место проведения: {place}
 '''
-<<<<<<< Updated upstream
-=======
+
 SELECT_INFO_COURSE = '''<b>Название курса: {name}</b>
 Название предмета: {course_subject_name}
 Преподаватель: {teacher_subject_name}
