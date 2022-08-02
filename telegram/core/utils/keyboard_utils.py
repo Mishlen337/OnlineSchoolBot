@@ -12,7 +12,7 @@ def add_course_desc_to_kb(kb: InlineKeyboardMarkup, course_id: int) -> None:
 
 async def add_course_packages_to_kb(kb_student: InlineKeyboardMarkup, course_id: int) -> None:
     packages_list = await get_course_packages(course_id)
-    kb_student.row_width = len(packages_list) if len(packages_list) > 0 else 1
+    kb_student.row_width = (len(packages_list) if len(packages_list) > 0 else 1)
     for package in packages_list:
         kb_student.add(
             InlineKeyboardButton(
@@ -21,10 +21,13 @@ async def add_course_packages_to_kb(kb_student: InlineKeyboardMarkup, course_id:
         )
 
 
-def add_personal_desc_to_kb(kb: InlineKeyboardMarkup, lesson_id: int) -> None:
-    kb.add(InlineKeyboardButton(text="Подробнее", callback_data="personal_desc:" + str(lesson_id)))
+def add_personal_desc_to_kb(kb: InlineKeyboardMarkup, teacher_id: int, subject_name: str) -> None:
+    kb.add(InlineKeyboardButton(
+        text="Подробнее",
+        callback_data="personal_desc:" + str(teacher_id) + ':' + subject_name))
 
 
-def add_contact_to_kb(kb: InlineKeyboardMarkup, lesson_id: int) -> None:
-    kb.add(InlineKeyboardButton(text="Связяться",
-                                callback_data="add_personal:" + str(lesson_id)))
+def add_contact_to_kb(kb: InlineKeyboardMarkup, teacher_id: int, subject_name: str) -> None:
+    kb.add(InlineKeyboardButton(
+        text="Связяться",
+        callback_data="add_personal:" + str(teacher_id) + ':' + subject_name))

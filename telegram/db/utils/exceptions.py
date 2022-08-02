@@ -17,3 +17,7 @@ class StudentExists(UnicodeError):
 
 class NoSuchCoursePackage(Exception):
     pass
+
+
+class NoSuchTutor(Exception):
+    pass

@@ -49,10 +49,12 @@ async def get_courses(message: types.Message, state: FSMContext):
 
 
 async def callback_desc(call: types.CallbackQuery):
-    # TODO task is to send teacher questionnaires (or links to them)
+    course_id = int(call.data.split(":")[1])
     text = call.message.text
-    if (text.find('Курс находится в корзине') != -1) or ((text.find('Курс уже выбран')) != -1) or \
-            (text.find('Выбран тариф') != -1):
+
+    if text.find('Курс находится в корзине') != -1 or (text.find('Курс оплачен')) != -1 or\
+        (text.find('Добавлен в корзину')) != -1 or (text.find('Курс оплачен')) != -1 or\
+        (text.find('Курс ранее добавлен в корзину')):
         await call.message.edit_text(
             f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
             parse_mode="HTML")
@@ -60,16 +62,16 @@ async def callback_desc(call: types.CallbackQuery):
         await call.message.edit_text(
             f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
             parse_mode="HTML",
-            reply_markup=all_keyboards["course_select_without_desc"]())
+            reply_markup=await all_keyboards["course_select_without_desc"](course_id))
 
 
 async def callback_add_course(call: types.CallbackQuery):
-    course_id = call.data.split(":")[1]
+    course_id = int(call.data.split(":")[1])
     package_name = call.data.split(":")[2]
     response_message = None
 
     try:
-        await order.add_course_package(call.from_user.id, int(course_id), package_name)
+        await order.add_course_package(call.from_user.id, course_id, package_name)
         response_message = f"\n<b>Добавлен в корзину.\n<b>Выбран пакет: </b>{package_name}</b>"
     except exceptions.NoSuchCoursePackage:
         await call.message.delete()
@@ -96,5 +98,5 @@ async def callback_add_course(call: types.CallbackQuery):
             f"{text2}", parse_mode="HTML")
     else:
         await call.message.edit_text(
-            f"{text}{response_message}",
+            f"{text} {response_message}",
             parse_mode="HTML", reply_markup=all_keyboards["course_desc"](course_id))

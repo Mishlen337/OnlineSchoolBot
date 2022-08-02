@@ -1,7 +1,7 @@
 """Module to declare message templates."""
-PERSONAL_LESSON_MESSAGE = '''<b>Преподаватель: {teacher_name}</b>
-Название занятия: {lesson_title}
-Место проведения: {place}
+TUTOR_MESSAGE = '''Предмет: <b>{subject_name}</b>
+Преподаватель: <b>{teacher_name} {teacher_patronymic} {teacher_surname}</b>
+Цена занятия: <b>{price}</b>
 '''
 
 SELECT_INFO_COURSE = '''Курс: <b>{course_name}</b>
@@ -19,7 +19,8 @@ BASKET_INFO_COURSE = '''Курс: <b>{course_name}</b>
 '''
 
 
-SCHEDULE_INFO_PERSONAL = '''<b>Предмет: {subject_name}</b>
+SCHEDULE_INFO_PERSONAL = '''
+<b>Предмет: {subject_name}</b>
 Преподаватель: <b>{teacher_name} {teacher_patronymic} {teacher_surname}</b>
 Название предмета: <b>{subject_name}</b>
 Начало: <b>{begin_at}</b>

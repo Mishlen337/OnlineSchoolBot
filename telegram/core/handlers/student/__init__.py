@@ -9,12 +9,12 @@ from . import courses, personal_lessons, personal_schedule, basket
 def setup(dp: Dispatcher):
     "Setups handlers for student."
     logger.debug("Start student's handlers registration.")
-    dp.register_message_handler(courses.get_courses, regexp="Выбрать курсы",
+    dp.register_message_handler(courses.get_courses, regexp="Курсы",
                                 state="student_main")
-    dp.register_message_handler(personal_lessons.get_lessons,
-                                regexp="Выбрать индивидуальные занятия",
+    dp.register_message_handler(personal_lessons.get_tutors,
+                                regexp="Репетиторы",
                                 state="student_main")
-    dp.register_message_handler(personal_schedule.get_schedule, regexp="Мое рассписание",
+    dp.register_message_handler(personal_schedule.get_schedule, regexp="Занятия",
                                 state="student_main")
     dp.register_message_handler(basket.get_basket, regexp="Корзина",
                                 state="student_main")
@@ -35,12 +35,12 @@ def setup(dp: Dispatcher):
     dp.register_message_handler(basket.get_basket, regexp="Корзина",
                                 state="student_main")
     dp.register_callback_query_handler(
-        personal_lessons.show_lesson_description,
+        personal_lessons.show_tutor_description,
         CallBackFilter("personal_desc"),
         state="student_main"
     )
     dp.register_callback_query_handler(
-        personal_lessons.add_lesson,
+        personal_lessons.contact_tutor,
         CallBackFilter("add_personal"),
         state="student_main"
     )

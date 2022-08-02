@@ -12,9 +12,9 @@ select c.name as course_name, c.subject_name,
 where s.tg_id = :tg_id and o.status = 'неоплачено';
 
 --name: purchase_basket
-update orders set status = 'оплачено' where student_id = :student_id
+update orders set status = 'оплачено' where student_id = :student_id and status = 'неоплачено' 
 
---name: _create_basket
+--name: _create_basket^
 insert into orders(order_time, student_id) values (:order_time, :student_id)
 returning id;
 
@@ -27,7 +27,8 @@ insert into order_course_package(order_id, student_id, course_id, package_name)
 
 --name: _get_order_id^
 select id from orders
-where student_id = :student_id
+where student_id = :student_id and status = 'неоплачено'
+limit 1;
 
 --name: _get_order_course_status^
 select ocp.package_name, o.status from order_course_package as ocp

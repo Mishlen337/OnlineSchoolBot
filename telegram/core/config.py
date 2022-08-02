@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     TELEGRAM_SECRET: str
     PAYMENTS_SECRET: str
     HOST_PORT: int
+    MODERATOR_TG_ID: int
 
     class Config:
         env_file = "../.env"

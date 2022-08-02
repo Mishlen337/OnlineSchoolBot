@@ -26,12 +26,8 @@ async def get_schedule(message: types.Message, state: FSMContext):
                     end_at=lesson['end_at'].strftime("%d-%m-%Y"),
                     broadcast_link=lesson['broadcast_link']
                 )
-            await message.answer(text=lesson_info, parse_mode='HTML')
-        elif webinars_list:
-            """--name: get_purchased_webinars_schedule
-                select c.name, c.subject_name, w.theme,
-                    e.name as teacher_name, e.patronymic as teacher_patronymic, e.surname as teacher_surname,
-                    w.begin_at, w.end_at, w.broadcast_link"""
+            await message.answer(text=lesson_info, parse_mode='HTML', disable_web_page_preview=True)
+        if webinars_list:
             lesson_info = 'Вебинары:\n'
             for lesson in webinars_list:
                 lesson_info += messages.SCHEDULE_INFO_WEBINARS.format(
@@ -45,8 +41,8 @@ async def get_schedule(message: types.Message, state: FSMContext):
                     end_at=lesson['end_at'].strftime("%d-%m-%Y"),
                     broadcast_link=lesson['broadcast_link']
                 )
-            await message.answer(text=lesson_info, parse_mode='HTML')
-        else:
+            await message.answer(text=lesson_info, parse_mode='HTML', disable_web_page_preview=True)
+        if not personal_lessons_list and not webinars_list:
             await message.answer("В расписании ничего нет.")
     except exceptions.ConnectionError:
         await message.answer("Упс. Что то пошло не так")

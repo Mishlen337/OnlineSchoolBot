@@ -17,8 +17,8 @@ async def commands_handler(message: types.Message, state: FSMContext):
                 await message.answer("Привет, сотрудник")
                 await state.set_state("employee_main")
             else:
-                await message.answer("Здесь будет приветственное слово и \
-                    регистрация", reply_markup=student_keyboards.all_keyboards["menu"]())
+                await message.answer("Здесь будет приветственное слово.",
+                                     reply_markup=student_keyboards.all_keyboards["menu"]())
 
                 try:
                     await user.tg_auth(message.from_user.id)

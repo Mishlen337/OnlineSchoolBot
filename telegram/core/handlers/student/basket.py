@@ -15,16 +15,13 @@ async def get_basket(message: types.Message, state: FSMContext):
     """Answers basket's content."""
     logger.debug(f"Student {message.from_user} requests basket's content.")
     courses_list = []
-    
+
     try:
         courses_list = await order.get_basket_content(message.from_user.id)
     except ConnectionError:
         await message.answer("Упс. Что то пошло не так")
         return
-    """select c.name as course_name, c.subject_name as course_subject_name,
-       e.name as teacher_name, e.patronymic as teacher_patronymic, e.surname as teacher_surname,
-       ocp.package_name, ocp.old_price as price"""
-    
+
     if courses_list:
         await message.answer("Курсы в корзине: ",
                              parse_mode='HTML', reply_markup=all_keyboards["menubasket"]())

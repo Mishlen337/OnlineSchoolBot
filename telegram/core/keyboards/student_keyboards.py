@@ -15,9 +15,9 @@ all_keyboards = {}
 def kb_student_menu():
     kb_student = ReplyKeyboardMarkup(resize_keyboard=True)
     kb_student.add(
-        KeyboardButton("Выбрать курсы"),
-        KeyboardButton("Выбрать индивидуальные занятия"),
-        KeyboardButton("Мое расписание"),
+        KeyboardButton("Курсы"),
+        KeyboardButton("Репетиторы"),
+        KeyboardButton("Занятия"),
         KeyboardButton("Корзина")
     )
     return kb_student
@@ -26,9 +26,9 @@ def kb_student_menu():
 def kb_menubasket():
     kb_student = ReplyKeyboardMarkup(resize_keyboard=True)
     kb_student.add(
-        KeyboardButton("Выбрать курсы"),
-        KeyboardButton("Выбрать индивидуальные занятия"),
-        KeyboardButton("Мое рассписание"),
+        KeyboardButton("Курсы"),
+        KeyboardButton("Репетиторы"),
+        KeyboardButton("Занятия"),
         KeyboardButton("Очистить корзину")
     )
     return kb_student
@@ -43,7 +43,7 @@ async def kb_course_select_with_desc(course_id):
     return kb_student
 
 
-async def kb_course_select_without_desc(kb_student: InlineKeyboardMarkup, course_id: int) -> None:
+async def kb_course_select_without_desc(course_id: int) -> None:
     kb_student = InlineKeyboardMarkup()
     await keyboard_utils.add_course_packages_to_kb(kb_student, course_id)
     return kb_student
@@ -57,22 +57,22 @@ def kb_course_desc(course_id):
 #  personal keyboards
 
 
-def kb_personal_desc(teacher_id: int) -> InlineKeyboardMarkup:
+def kb_personal_desc(teacher_id: int, subject_name: str) -> InlineKeyboardMarkup:
     kb_show_desc = InlineKeyboardMarkup()
-    keyboard_utils.add_personal_desc_to_kb(kb_show_desc, teacher_id)
+    keyboard_utils.add_personal_desc_to_kb(kb_show_desc, teacher_id, subject_name)
     return kb_show_desc
 
 
-def kb_personal_select_with_desc(lesson_id: str) -> InlineKeyboardMarkup:
+def kb_personal_select_with_desc(teacher_id: int, subject_name: str) -> InlineKeyboardMarkup:
     kb_add_lesson = InlineKeyboardMarkup()
-    keyboard_utils.add_contact_to_kb(kb_add_lesson, lesson_id)
-    keyboard_utils.add_personal_desc_to_kb(kb_add_lesson, lesson_id)
+    keyboard_utils.add_contact_to_kb(kb_add_lesson, teacher_id, subject_name)
+    keyboard_utils.add_personal_desc_to_kb(kb_add_lesson, teacher_id, subject_name)
     return kb_add_lesson
 
 
-def kb_personal_select_without(lesson_id: str) -> InlineKeyboardMarkup:
+def kb_personal_select_without_desc(teacher_id: int, subject_name: str) -> InlineKeyboardMarkup:
     kb_add_lesson = InlineKeyboardMarkup()
-    keyboard_utils.add_contact_to_kb(kb_add_lesson, lesson_id)
+    keyboard_utils.add_contact_to_kb(kb_add_lesson, teacher_id, subject_name)
     return kb_add_lesson
 
 
@@ -82,5 +82,4 @@ all_keyboards["course_select_without_desc"] = kb_course_select_without_desc
 all_keyboards["course_select_with_desc"] = kb_course_select_with_desc
 all_keyboards["course_desc"] = kb_course_desc
 all_keyboards["personal_select_with_desc"] = kb_personal_select_with_desc
-all_keyboards["personal_desc"] = kb_personal_desc
-all_keyboards["kb_personal_select_without"] = kb_personal_select_without
+all_keyboards["personal_select_without_desc"] = kb_personal_select_without_desc

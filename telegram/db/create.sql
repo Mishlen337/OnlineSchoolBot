@@ -28,9 +28,11 @@ create table IF not EXISTS employee_subject (
     role varchar (50) not null CONSTRAINT fk_role REFERENCES employee_roles(role) on delete RESTRICT,
     available boolean,
     individual_price integer,
+    description text,
     primary key (employee_id, subject_name, role),
-    CONSTRAINT check_individual_price CHECK((role = 'personal_teacher' and available is not null and individual_price is not null) or
-                                       role != 'personal_teacher' and available is null and individual_price is null)
+    CONSTRAINT check_individual_price
+    CHECK((role = 'personal_teacher' and available is not null and individual_price is not null) or
+          role != 'personal_teacher' and available is null and individual_price is null)
 );
 
 
@@ -83,7 +85,7 @@ BEGIN
                                        w.begin_at >= new.begin_at and w.begin_at <= new.end_at)
         into count_webinar_intersects;
     
-    if count_personal_lesson_intersects > 0 THEN
+    if count_personal_lesson_intersects > 1 THEN
         RAISE EXCEPTION 'Personal lesson intersects with other personal lessons. teacher id: %', new.teacher_id
             USING ERRCODE = '09001';
         return null;
@@ -98,7 +100,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER tr_check_personal_lesson_intersection
-before INSERT OR UPDATE ON personal_lessons FOR EACH ROW
+after INSERT OR UPDATE ON personal_lessons FOR EACH ROW
 EXECUTE PROCEDURE check_personal_lesson_intersection();
 
 create or replace function add_personal_lesson_price() returns trigger AS $$
@@ -248,7 +250,7 @@ BEGIN
                                               or 
                                               begin_at >= new.begin_at and begin_at <= new.end_at)
         into count_personal_lesson_intersects;
-    SELECT count(*) FROM webinars where course_id = new.course_id and 
+    SELECT count(*) FROM webinars where course_id in (select id from courses where teacher_id=webinar_teacher_id) and 
                                       (begin_at <= begin_at AND end_at >= new.begin_at
                                        or
                                        begin_at >= new.begin_at and begin_at <= new.end_at)
