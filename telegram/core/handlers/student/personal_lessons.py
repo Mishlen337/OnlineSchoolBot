@@ -38,7 +38,7 @@ async def get_tutors(message: types.Message, state: FSMContext):
                     parse_mode="HTML"
                 )
         else:
-            await message.answer("Доступ репетиров нет.")
+            await message.answer("Доступных репетиторов нет.")
     except exceptions.ConnectionError:
         await message.answer("Упс. Что то пошло не так")
 
