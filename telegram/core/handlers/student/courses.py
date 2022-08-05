@@ -22,7 +22,7 @@ async def get_courses(message: types.Message, state: FSMContext):
                     course_name=crs['course_name'],
                     subject_name=crs['subject_name'],
                     teacher_name=crs['teacher_name'],
-                    teacher_patronymic=crs['teacher_patronymic'],
+                    teacher_patronymic=crs['teacher_patronymic'] if crs['teacher_patronymic'] != None else '',
                     teacher_surname=crs['teacher_surname'],
                     begin_at=crs['begin_at'].strftime("%d-%m-%Y"),
                     end_at=crs['end_at'].strftime("%d-%m-%Y"),
