@@ -15,7 +15,6 @@ async def get_basket(message: types.Message, state: FSMContext):
     """Answers basket's content."""
     logger.debug(f"Student {message.from_user} requests basket's content.")
     courses_list = []
-
     try:
         courses_list = await order.get_basket_content(message.from_user.id)
     except ConnectionError:
@@ -44,7 +43,7 @@ async def get_basket(message: types.Message, state: FSMContext):
         await message.answer(text=msg_text, parse_mode='HTML')
 
         # course_prices.append(types.LabeledPrice(label='Скидка', amount=-100))
-        await bot.send_invoice(message.chat.id,
+        send_message = await bot.send_invoice(message.chat.id,
                                title='Выбранные курсы',
                                description=' ',
                                provider_token=config.PAYMENTS_SECRET,
@@ -65,7 +64,7 @@ async def successful_payment(message: types.Message):
     try:
         await order.purchase_basket(message.from_user.id)
         await message.answer(f"Оплата на сумму {text.total_amount // 100} {text.currency} прошла успешно",
-                             parse_mode='HTML')
+                             parse_mode='HTML', reply_markup=all_keyboards["menu"]())
     except exceptions.ConnectionError:
         await message.answer("Упс. Что то пошло не так")
 

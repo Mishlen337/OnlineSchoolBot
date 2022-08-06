@@ -22,7 +22,7 @@ async def get_courses(message: types.Message, state: FSMContext):
                     course_name=crs['course_name'],
                     subject_name=crs['subject_name'],
                     teacher_name=crs['teacher_name'],
-                    teacher_patronymic=crs['teacher_patronymic'],
+                    teacher_patronymic=crs['teacher_patronymic'] if crs['teacher_patronymic'] != None else '',
                     teacher_surname=crs['teacher_surname'],
                     begin_at=crs['begin_at'].strftime("%d-%m-%Y"),
                     end_at=crs['end_at'].strftime("%d-%m-%Y"),
@@ -49,20 +49,21 @@ async def get_courses(message: types.Message, state: FSMContext):
 
 
 async def callback_desc(call: types.CallbackQuery):
+    logger.debug(f"Student {call.from_user} requests available courses.")
     course_id = int(call.data.split(":")[1])
     text = call.message.text
-
-    if text.find('Курс находится в корзине') != -1 or (text.find('Курс оплачен')) != -1 or\
-        (text.find('Добавлен в корзину')) != -1 or (text.find('Курс оплачен')) != -1 or\
-        (text.find('Курс ранее добавлен в корзину')):
-        await call.message.edit_text(
-            f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
-            parse_mode="HTML")
-    else:
-        await call.message.edit_text(
-            f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
-            parse_mode="HTML",
-            reply_markup=await all_keyboards["course_select_without_desc"](course_id))
+    course_list = await course.get_courses(call.from_user.id)
+    for crs in course_list:
+        if crs['course_id'] == course_id:
+            if crs['status'] in ['оплачено', 'неоплачено']:
+                await call.message.edit_text(
+                    f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
+                    parse_mode="HTML")
+            else:
+                await call.message.edit_text(
+                    f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
+                    parse_mode="HTML",
+                    reply_markup=await all_keyboards["course_select_without_desc"](course_id))
 
 
 async def callback_add_course(call: types.CallbackQuery):
@@ -90,12 +91,13 @@ async def callback_add_course(call: types.CallbackQuery):
         return
 
     text = call.message.text
-    if text.find('https') != -1:
-        text1 = text[:text.find('https')]
-        text2 = text[text.find('https'):]
+    index = text.find('https')
+    if index != -1:
+        text_1 = text[:index]
+        text_2 = text[index:]
         await call.message.edit_text(
-            f"{text1}{response_message}"
-            f"{text2}", parse_mode="HTML")
+            f"{text_1}{response_message}\n"
+            f"{text_2}", parse_mode="HTML")
     else:
         await call.message.edit_text(
             f"{text} {response_message}",

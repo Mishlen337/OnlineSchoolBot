@@ -26,7 +26,7 @@ async def get_tutors(message: types.Message, state: FSMContext):
             for teacher in personal_teacher_list:
                 msg_text = TUTOR_MESSAGE.format(
                     teacher_name=teacher['teacher_name'],
-                    teacher_patronymic=teacher['teacher_patronymic'],
+                    teacher_patronymic=teacher['teacher_patronymic'] if teacher['teacher_patronymic'] != None else '',
                     teacher_surname=teacher['teacher_surname'],
                     subject_name=teacher['subject_name'],
                     price=teacher['price']
@@ -38,7 +38,7 @@ async def get_tutors(message: types.Message, state: FSMContext):
                     parse_mode="HTML"
                 )
         else:
-            await message.answer("Доступ репетиров нет.")
+            await message.answer("Доступных репетиторов нет.")
     except exceptions.ConnectionError:
         await message.answer("Упс. Что то пошло не так")
 
