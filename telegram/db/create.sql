@@ -196,6 +196,7 @@ create table if not exists order_course_package (
     course_id integer not null,
     package_name varchar(50) not null,
     old_price integer not null,
+    message_id numeric(31),
     CONSTRAINT fk_order foreign key (order_id, student_id) REFERENCES orders(id, student_id) on delete CASCADE,
     CONSTRAINT fk_course_package FOREIGN key (course_id, package_name) REFERENCES course_package(course_id, package_name),
     CONSTRAINT student_id_course_id_unique UNIQUE (student_id, course_id)

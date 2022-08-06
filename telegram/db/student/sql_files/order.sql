@@ -34,3 +34,13 @@ limit 1;
 select ocp.package_name, o.status from order_course_package as ocp
     join orders as o on ocp.order_id = o.id
 where o.id = :order_id and ocp.student_id = :student_id and ocp.course_id = :course_id;
+
+--name: get_order_course_package_message_ids
+select ocp.message_id from order_course_package as ocp
+    join orders as o on ocp.order_id = o.id
+    join students as s on o.student_id = s.id
+    where s.tg_id = :tg_id and o.status = 'неоплачено';
+
+--name: update_order_course_package_message_ids
+update order_course_package set message_id = :message_id
+where order_id = :order_id
