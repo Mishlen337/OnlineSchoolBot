@@ -40,7 +40,7 @@ async def get_tutors(message: types.Message, state: FSMContext):
         else:
             await message.answer("Доступных репетиторов нет.")
     except exceptions.ConnectionError:
-        await message.answer("Упс. Что то пошло не так")
+        await message.answer("Упс. Что-то пошло не так")
 
 
 async def show_tutor_description(callback: types.CallbackQuery):
@@ -58,7 +58,7 @@ async def show_tutor_description(callback: types.CallbackQuery):
         await callback.answer("Данные преподаватель больше недоступен.")
         return
     except exceptions.ConnectionError:
-        await callback.answer("Упс. Что то пошло не так")
+        await callback.answer("Упс. Что-то пошло не так")
         return
     text = callback.message.text + description
     await callback.message.edit_text(

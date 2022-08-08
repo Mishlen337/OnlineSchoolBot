@@ -86,7 +86,7 @@ async def get_order_course_package_message_ids(tg_id):
     query = aiosql.from_path("./telegram/db/student/sql_files/order.sql", driver_adapter="asyncpg")
     try:
         conn = await asyncpg.connect(config.DB_URI)
-        result = (await query.get_order_course_package_message_ids(conn, tg_id))["id"]
+        result = (await query.get_order_course_package_message_ids(conn, tg_id))
         return result
     except (asyncpg.PostgresConnectionError, OSError):
         if conn:

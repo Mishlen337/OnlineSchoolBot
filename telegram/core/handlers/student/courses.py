@@ -44,7 +44,7 @@ async def get_courses(message: types.Message, state: FSMContext):
         else:
             await message.answer("Курсы отсутствуют.")
     except exceptions.ConnectionError:
-        await message.answer("Упс. Что то пошло не так")
+        await message.answer("Упс. Что-то пошло не так")
         return
 
 
@@ -87,7 +87,7 @@ async def callback_add_course(call: types.CallbackQuery):
         else:
             response_message = f"\n<b>Курс ранее добавлен в корзину.\n<b>Выбраный ранее пакет: </b>{e.args[0]['package_name']}</b>"
     except exceptions.ConnectionError:
-        await call.message.answer("Упс. Что то пошло не так")
+        await call.message.answer("Упс. Что-то пошло не так")
         return
 
     text = call.message.text

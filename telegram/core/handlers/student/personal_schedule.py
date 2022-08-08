@@ -45,4 +45,4 @@ async def get_schedule(message: types.Message, state: FSMContext):
         if not personal_lessons_list and not webinars_list:
             await message.answer("В расписании ничего нет.")
     except exceptions.ConnectionError:
-        await message.answer("Упс. Что то пошло не так")
+        await message.answer("Упс. Что-то пошло не так")
