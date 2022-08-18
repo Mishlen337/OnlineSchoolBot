@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     WEBHOOK_URL: str
     TELEGRAM_SECRET: str
     PAYMENTS_SECRET: str
+    TG_HOST: str
     HOST_PORT: int
     MODERATOR_TG_ID: int
 

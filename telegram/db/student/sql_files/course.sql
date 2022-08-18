@@ -24,3 +24,23 @@ from
   course_package
 where
   course_id = :course_id;
+
+--name: get_purchased_courses
+select c.id, c.name from
+  orders as o join order_course_package as ocp on o.id = ocp.order_id
+              join courses as c on ocp.course_id = c.id
+              join students as s on o.student_id = s.id
+  where o.status = 'оплачено' and s.tg_id = :tg_id
+
+--name: get_full_and_partly_purchased_courses
+select c.id, c.name from
+  orders as o join order_course_package as ocp on o.id = ocp.order_id
+              join courses as c on ocp.course_id = c.id
+              join students as s on o.student_id = s.id
+  where o.status = 'оплачено' and s.tg_id = :tg_id
+union
+select c.id, c.name from
+  purchased_webinars as pw join webinars as w on pw.webinar_id = w.id
+                           join courses as c on w.course_id = c.id
+                           join students as s on pw.student_id = s.id
+  where s.tg_id = :tg_id

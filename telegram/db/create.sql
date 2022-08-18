@@ -234,8 +234,8 @@ create table if not exists webinars (
     record_link text,
     homework_link text,
     CONSTRAINT format_restrictions_check CHECK (
-        format = 'онлайн' and begin_at is not null and end_at is not null or format = 'запись' and record_link is not null),
-    CONSTRAINT date_check check (begin_at is not null and end_at is not null and begin_at < end_at)
+        format = 'онлайн' and begin_at is not null and end_at is not null and begin_at < end_at
+            or format = 'запись' and record_link is not null),
 );
 
 create or replace function check_webinar_intersection() returns trigger AS $$
