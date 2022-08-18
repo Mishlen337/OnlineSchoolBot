@@ -1,6 +1,4 @@
-
 --name: get_webinar_materials
-
 select w.theme, w.format, w.begin_at, w.end_at, w.record_link, w.material_link, w.homework_link
     from purchased_webinars as pw
         join webinars as w on pw.webinar_id = w.id
