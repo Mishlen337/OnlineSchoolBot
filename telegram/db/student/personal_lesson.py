@@ -38,3 +38,20 @@ async def get_personal_teacher_description(employee_id, subject_name):
         if conn:
             await conn.close()
         raise exceptions.ConnectionError()
+
+
+async def get_selected_personal_teachers(tg_id):
+    conn = None
+    query = aiosql.from_path("./telegram/db/student/sql_files/personal_lesson.sql",
+                             driver_adapter="asyncpg")
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        result = await query.get_selected_personal_teachers(conn, tg_id)
+        await conn.close()
+        return result
+    except KeyError:
+        raise exceptions.NoSuchTutor()
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()
