@@ -9,6 +9,7 @@ from core.utils import keyboard_utils
 
 all_keyboards = {}
 
+
 #  basic keyboards
 
 
@@ -18,7 +19,8 @@ def kb_student_menu():
         KeyboardButton("Курсы"),
         KeyboardButton("Репетиторы"),
         KeyboardButton("Занятия"),
-        KeyboardButton("Корзина")
+        KeyboardButton("Корзина"),
+        KeyboardButton("Материалы")
     )
     return kb_student
 
@@ -29,7 +31,8 @@ def kb_menubasket():
         KeyboardButton("Курсы"),
         KeyboardButton("Репетиторы"),
         KeyboardButton("Занятия"),
-        KeyboardButton("Очистить корзину")
+        KeyboardButton("Очистить корзину"),
+        KeyboardButton("Материалы")
     )
     return kb_student
 
@@ -54,6 +57,7 @@ def kb_course_desc(course_id):
     keyboard_utils.add_course_desc_to_kb(kb_student, course_id)
     return kb_student
 
+
 #  personal keyboards
 
 
@@ -76,6 +80,26 @@ def kb_personal_select_without_desc(teacher_id: int, subject_name: str) -> Inlin
     return kb_add_lesson
 
 
+# materials keyboards
+
+def kb_materials(tg_id: int):
+    kb_student = InlineKeyboardMarkup()
+    keyboard_utils.add_materials(kb_student, tg_id)
+    return kb_student
+
+
+def kb_show_course_materials(tg_id, course_id: int):
+    kb_student = InlineKeyboardMarkup()
+    keyboard_utils.add_course_materials(kb_student, tg_id, course_id)
+    return kb_student
+
+
+async def kb_show_personal_subjects(tg_id: int):
+    kb_student = InlineKeyboardMarkup()
+    await keyboard_utils.add_subjects(kb_student, tg_id)
+    return kb_student
+
+
 all_keyboards["menu"] = kb_student_menu
 all_keyboards["menubasket"] = kb_menubasket
 all_keyboards["course_select_without_desc"] = kb_course_select_without_desc
@@ -83,3 +107,6 @@ all_keyboards["course_select_with_desc"] = kb_course_select_with_desc
 all_keyboards["course_desc"] = kb_course_desc
 all_keyboards["personal_select_with_desc"] = kb_personal_select_with_desc
 all_keyboards["personal_select_without_desc"] = kb_personal_select_without_desc
+all_keyboards["materials"] = kb_materials
+all_keyboards["show_course_materials"] = kb_show_course_materials
+all_keyboards["show_personal_subjects"] = kb_show_personal_subjects
