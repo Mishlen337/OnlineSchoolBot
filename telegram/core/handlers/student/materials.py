@@ -67,7 +67,7 @@ async def get_webinar(callback: types.CallbackQuery, state: FSMContext):
         await callback.answer()
 
 async def get_personal_materials(callback: types.CallbackQuery, state: FSMContext):
-    logger.debug(f"Student {callback.from_user} requests materials for personal lessons.")
+    logger.debug(f"Student {callback.from_user} requests materials for personal materials.")
     tg_id = int(callback.data.split(':')[1])
     await callback.message.edit_text(text=callback.message.text,
                                      reply_markup=await all_keyboards["show_personal_subjects"](tg_id))
