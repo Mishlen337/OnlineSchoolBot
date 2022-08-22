@@ -32,7 +32,7 @@ def setup(dp: Dispatcher):
                                        state="student_main")
     dp.register_callback_query_handler(materials.get_webinar, CallBackFilter("show_course_materials"),
                                        state="student_main")
-    dp.register_callback_query_handler(materials.get_personal_lessons, CallBackFilter("add_subject_and_teacher"),
+    dp.register_callback_query_handler(materials.get_personal_lessons, CallBackFilter("show_personal_materials"),
                                        state="student_main")
     dp.register_pre_checkout_query_handler(basket.checkout_process,
                                            state="student_main")

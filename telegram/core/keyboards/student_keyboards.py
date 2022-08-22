@@ -93,12 +93,10 @@ def kb_show_course_materials(tg_id, course_id: int):
     keyboard_utils.add_course_materials(kb_student, tg_id, course_id)
     return kb_student
 
-
-async def kb_show_personal_subjects(tg_id: int):
+def kb_show_personal_materials(tg_id, teacher_id: int, subject_name: str):
     kb_student = InlineKeyboardMarkup()
-    await keyboard_utils.add_subjects(kb_student, tg_id)
+    keyboard_utils.add_personal_materials(kb_student, tg_id, teacher_id, subject_name)
     return kb_student
-
 
 all_keyboards["menu"] = kb_student_menu
 all_keyboards["menubasket"] = kb_menubasket
@@ -109,4 +107,4 @@ all_keyboards["personal_select_with_desc"] = kb_personal_select_with_desc
 all_keyboards["personal_select_without_desc"] = kb_personal_select_without_desc
 all_keyboards["materials"] = kb_materials
 all_keyboards["show_course_materials"] = kb_show_course_materials
-all_keyboards["show_personal_subjects"] = kb_show_personal_subjects
+all_keyboards["show_personal_materials"] = kb_show_personal_materials

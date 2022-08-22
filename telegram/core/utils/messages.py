@@ -44,7 +44,7 @@ INFO_COURSE_MATERIALS = '''
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
 '''
 
-INFO_WEBINARS = '''
+INFO_WEBINARS_ONLINE = '''
 Тема: <b>{theme}</b>
 Формат: <b>{format}</b>
 Начало: <b>{begin_at}</b>
@@ -54,11 +54,23 @@ INFO_WEBINARS = '''
 Домашнее задание: <b>{homework_link}</b>
 '''
 
+INFO_WEBINARS_RECORD = '''
+Тема: <b>{theme}</b>
+Формат: <b>{format}</b>
+Ссылка: <b>{record_link}</b>
+Конспект: <b>{material_link}</b>
+Домашнее задание: <b>{homework_link}</b>
+'''
+
 INFO_PERSONAL_LESSONS = '''
-Предмет: <b>{subject_name}</b>
 Начало: <b>{begin_at}</b>
 Конец: <b>{end_at}</b>
 Ссылка: <b>{record_link}</b>
 Конспект: <b>{material_link}</b>
 Домашнее задание: <b>{homework_link}</b>
+'''
+
+INFO_PERSONAL_TEACHERS = '''
+Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
+Предмет: <b>{subject_name}</b>
 '''
