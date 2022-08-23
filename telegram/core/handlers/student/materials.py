@@ -6,11 +6,8 @@ from db.student.course import get_full_and_partly_purchased_courses
 from db.student.material import get_webinar_materials, get_personal_lessons_materials
 from core.utils.messages import INFO_COURSE_MATERIALS, INFO_WEBINARS_ONLINE,INFO_WEBINARS_RECORD, INFO_PERSONAL_LESSONS, INFO_PERSONAL_TEACHERS
 from db.student.personal_lesson import get_selected_personal_teachers
+from core.handlers.student.handlers_utils import formatting
 
-
-def formatting(string: str) -> str:
-    state, change = map(str, string.split(':'))
-    return state + ': ' + '<b>' + change + '</b>' + '\n'
 
 
 async def get_materials(message: types.Message, state: FSMContext):

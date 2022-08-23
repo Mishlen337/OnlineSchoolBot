@@ -4,6 +4,7 @@ from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 from core.utils.messages import SELECT_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
+from core.handlers.student.handlers_utils import formatting
 
 from db.student import course, order
 from db.utils import exceptions
@@ -30,11 +31,11 @@ async def get_courses(message: types.Message, state: FSMContext):
                 match(crs['status']):
                     case 'неоплачено':
                         await message.answer(
-                            f"{msg_text}Курс находится в корзине", parse_mode="HTML",
+                            f"{msg_text}<b>Курс находится в корзине</b>", parse_mode="HTML",
                             reply_markup=all_keyboards["course_desc"](crs['course_id']))
                     case 'оплачено':
                         await message.answer(
-                            f"{msg_text}Курс оплачен", parse_mode="HTML",
+                            f"{msg_text}<b>Курс оплачен</b>", parse_mode="HTML",
                             reply_markup=all_keyboards["course_desc"](crs['course_id']))
                     case _:
                         await message.answer(
@@ -51,7 +52,15 @@ async def get_courses(message: types.Message, state: FSMContext):
 async def callback_desc(call: types.CallbackQuery):
     logger.debug(f"Student {call.from_user} requests available courses.")
     course_id = int(call.data.split(":")[1])
-    text = call.message.text
+    text_list = call.message.text.split('\n')
+    text = ''
+    for i in range(5):
+        text += formatting(text_list[i])
+    if len(text_list) != 5:
+        text += '<b>'
+        for i in range(5, len(text_list)):
+            text += text_list[i] + '\n'
+        text += '</b>'
     course_list = await course.get_courses(call.from_user.id)
     for crs in course_list:
         if crs['course_id'] == course_id:
@@ -90,7 +99,15 @@ async def callback_add_course(call: types.CallbackQuery):
         await call.message.answer("Упс. Что-то пошло не так")
         return
 
-    text = call.message.text
+    text_list = call.message.text.split('\n')
+    text = ''
+    for string in range(5):
+        text += formatting(text_list[string])
+    if len(text_list) != 5:
+        text += '<b>'
+        for string in range(5, len(text_list)):
+            text += text_list[string] + '\n'
+        text += '</b>'
     index = text.find('https')
     if index != -1:
         text_1 = text[:index]
