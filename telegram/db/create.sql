@@ -60,7 +60,7 @@ create TABLE if not exists personal_lessons (
     material_link text,
     record_link text,
     homework_link text,
-    done_homework_file_id bigint,
+    done_homework_file_id text,
     assistant_id integer constraint fk_employee REFERENCES employees(id) on delete set null,
     hometask_status varchar(9) CONSTRAINT hometask_status_check check(hometask_status in ('cдано', 'назначено', 'проверено')),
     CONSTRAINT fk_employee_subject FOREIGN KEY (teacher_id, subject_name, role) REFERENCES employee_subject(employee_id, subject_name, role),
