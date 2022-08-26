@@ -7,6 +7,7 @@ select
   e.surname as teacher_surname,
   c.begin_at,
   c.end_at,
+  c.description,
   filt_o.status
 from
   courses as c

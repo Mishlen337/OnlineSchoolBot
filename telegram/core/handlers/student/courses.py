@@ -57,11 +57,11 @@ async def callback_desc(call: types.CallbackQuery):
         if crs['course_id'] == course_id:
             if crs['status'] in ['оплачено', 'неоплачено']:
                 await call.message.edit_text(
-                    f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
+                    f"{text}\n{crs['description']}",
                     parse_mode="HTML")
             else:
                 await call.message.edit_text(
-                    f"{text}\nhttps://telegra.ph/Izmajlov-Aleksandr-Ajratovich-07-14",
+                    f"{text}\n{crs['description']}",
                     parse_mode="HTML",
                     reply_markup=await all_keyboards["course_select_without_desc"](course_id))
 
