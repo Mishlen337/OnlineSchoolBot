@@ -21,6 +21,7 @@ create table if not exists employee_roles (
 
 insert into employee_roles values ('course_teacher');
 insert into employee_roles values ('personal_teacher');
+insert into employee_roles values ('assistant');
 
 create table IF not EXISTS employee_subject (
     employee_id integer not null CONSTRAINT fk_employee REFERENCES employees(id) on delete RESTRICT,
@@ -60,9 +61,7 @@ create TABLE if not exists personal_lessons (
     material_link text,
     record_link text,
     homework_link text,
-    done_homework_file_id text,
-    assistant_id integer constraint fk_employee REFERENCES employees(id) on delete set null,
-    hometask_status varchar(9) CONSTRAINT hometask_status_check check(hometask_status in ('cдано', 'назначено', 'проверено')),
+    homework_deadline_time timestamp,
     CONSTRAINT fk_employee_subject FOREIGN KEY (teacher_id, subject_name, role) REFERENCES employee_subject(employee_id, subject_name, role),
     CONSTRAINT date_check check (begin_at < end_at)
 );
@@ -128,7 +127,8 @@ create table if not exists courses (
     teacher_id integer not null,
     subject_name varchar(50) not null,
     role VARCHAR(50) not null constraint role_check check(role = 'course_teacher'),
-    CONSTRAINT fk_employee_subject FOREIGN KEY (teacher_id, subject_name, role) REFERENCES employee_subject(employee_id, subject_name, role) on delete restrict
+    CONSTRAINT fk_employee_subject FOREIGN KEY (teacher_id, subject_name, role) REFERENCES employee_subject(employee_id, subject_name, role) on delete restrict,
+    CONSTRAINT id_subject_name_unique UNIQUE(id, subject_name)
 );
 
 create table if not exists packages (
@@ -233,6 +233,7 @@ create table if not exists webinars (
     material_link text,
     record_link text,
     homework_link text,
+    homework_deadline_time timestamp,
     CONSTRAINT format_restrictions_check CHECK (
         format = 'онлайн' and begin_at is not null and end_at is not null and begin_at < end_at
             or format = 'запись' and record_link is not null)
@@ -244,6 +245,7 @@ DECLARE
     webinar_teacher_id integer;
     count_personal_lesson_intersects integer;
     count_webinar_intersects integer;
+    w record;
 BEGIN
     SELECT teacher_id from courses where id = new.course_id into webinar_teacher_id;
     SELECT count(*) FROM personal_lessons WHERE teacher_id = webinar_teacher_id AND
@@ -252,10 +254,21 @@ BEGIN
                                               begin_at >= new.begin_at and begin_at <= new.end_at)
         into count_personal_lesson_intersects;
     SELECT count(*) FROM webinars where course_id in (select id from courses where teacher_id=webinar_teacher_id) and 
-                                      (begin_at <= begin_at AND end_at >= new.begin_at
+                                      (begin_at <= new.begin_at AND end_at >= new.begin_at
                                        or
                                        begin_at >= new.begin_at and begin_at <= new.end_at)
         into count_webinar_intersects;
+    
+    FOR w in select * FROM webinars  where course_id in (select id from courses where teacher_id=webinar_teacher_id) and 
+                                      (begin_at <= begin_at AND end_at >= new.begin_at
+                                       or
+                                       begin_at >= new.begin_at and begin_at <= new.end_at)
+    LOOP
+        BEGIN
+            RAISE NOTICE '%   ', w;
+        end;
+    end Loop;
+
     if count_personal_lesson_intersects > 0 then
         RAISE exception 'Webinar intersects with personal lessons. teacher id: %', webinar_teacher_id
             USING ERRCODE = '09003';
@@ -276,7 +289,7 @@ BEGIN
                 THEN RAISE NOTICE 'webinar has been already purchased by student_id: %', st;
         end;
     END LOOP;
-    return null;
+    return new;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -292,3 +305,191 @@ create table if not exists purchased_webinars (
     student_id integer CONSTRAINT fk_student REFERENCES students(id),
     primary key(webinar_id, student_id)
 );
+
+create table if not exists course_assistings (
+    id serial primary key,
+    assistant_id integer not null,
+    assistant_subject_name varchar(50) not null,
+    assistant_role VARCHAR(50) not null constraint role_check check(assistant_role = 'assistant'),
+    course_id integer not null,
+    course_subject_name varchar(50) not null,
+    available boolean not null default true,
+    CONSTRAINT fk_course FOREIGN KEY(course_id, course_subject_name)
+        REFERENCES courses(id, subject_name) on delete restrict,
+    CONSTRAINT fk_employee_subject FOREIGN KEY (assistant_id, assistant_subject_name, assistant_role)
+        REFERENCES employee_subject(employee_id, subject_name, role) on delete restrict,
+    CONSTRAINT subject_name_check CHECK(assistant_subject_name = course_subject_name),
+    CONSTRAINT assistant_id_course_id_unique UNIQUE(assistant_id, course_id)
+);
+
+create table if not exists done_webinars_homework (
+    id serial primary key,
+    webinar_id integer not null,
+    student_id integer not null,
+    assistant_id integer not null,
+    course_id integer not null,
+    done_homework_file_id text not null,
+    done_homework_time TIMESTAMP not null,
+    checked_homework_file_id text,
+    CONSTRAINT fk_purchased_webinars FOREIGN KEY (webinar_id, student_id) REFERENCES purchased_webinars(webinar_id, student_id),
+    CONSTRAINT fk_course_assistings FOREIGN KEY (assistant_id, course_id) REFERENCES course_assistings(assistant_id, course_id),
+    CONSTRAINT webinar_id_student_id_unique UNIQUE (webinar_id, student_id)
+);
+
+create or replace function preprocessing_done_webinars_homework() returns trigger AS $$
+DECLARE
+    min_assistant_homeworks integer;
+    webinar_course_id integer;
+BEGIN
+    new.done_homework_time := NOW();
+
+    IF new.assistant_id is NULL AND new.course_id is NULL THEN
+        select course_id from webinars where id = new.webinar_id into webinar_course_id;
+        new.course_id := webinar_course_id;
+        select min(assistings_count.count) from
+            (select count(*) as count from course_assistings as ca
+                LEFT JOIN done_webinars_homework as dwh ON ca.assistant_id = dwh.assistant_id and ca.course_id = dwh.course_id
+            where ca.course_id = webinar_course_id and ca.available = True GROUP BY ca.assistant_id)
+                as assistings_count
+        into min_assistant_homeworks;
+        IF min_assistant_homeworks is NULL then
+            RAISE exception 'No assistants can check the homework or no such webinar'
+                USING ERRCODE = '09005';
+            return null;
+        END IF;
+        select ca.assistant_id from course_assistings as ca
+            LEFT JOIN done_webinars_homework as dwh ON ca.assistant_id = dwh.assistant_id and ca.course_id = dwh.course_id
+        where ca.course_id = webinar_course_id and ca.available = True  GROUP BY ca.assistant_id HAVING count(*) = min_assistant_homeworks
+        limit 1 into new.assistant_id;
+    END IF;
+    return new;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_preprocessing_done_webinars_homework before
+INSERT
+  ON done_webinars_homework FOR EACH ROW
+EXECUTE
+  PROCEDURE preprocessing_done_webinars_homework();
+
+create or replace function check_webinar_done_homework_time() returns trigger AS $$
+DECLARE
+    homework_deadline_time_var TIMESTAMP;
+BEGIN
+    IF homework_deadline_time_var is not null and new.done_homework_time > homework_deadline_time_var then
+        RAISE exception 'Done homework time more than webinars deadline time: %', homework_deadline_time_var
+            USING ERRCODE = '09007';
+        return null;
+    end IF;
+    return null;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_check_webinar_done_homework_time after
+INSERT
+  ON done_webinars_homework FOR EACH ROW
+EXECUTE
+  PROCEDURE check_webinar_done_homework_time();
+
+
+create table if not exists personal_assistings (
+    id serial PRIMARY KEY,
+    teacher_id integer not null,
+    teacher_subject_name varchar(50) not null,
+    teacher_role varchar(50) not null constraint teacher_role_check check(teacher_role = 'personal_teacher'),
+    assistant_id integer not null,
+    assistant_subject_name varchar(50) not null,
+    assistant_role varchar(50) not null constraint assistant_role_check check(assistant_role = 'assistant'),
+    available boolean not null default true,
+    
+    CONSTRAINT fk_assistant_employee_subject FOREIGN KEY (assistant_id, assistant_subject_name, assistant_role)
+        REFERENCES employee_subject(employee_id, subject_name, role) on delete restrict,
+    CONSTRAINT fk_teacher_employee_subject FOREIGN KEY (teacher_id, teacher_subject_name, teacher_role)
+        REFERENCES employee_subject(employee_id, subject_name, role) on delete restrict,
+    CONSTRAINT subject_check CHECK (teacher_subject_name = assistant_subject_name),
+    CONSTRAINT teacher_id_teacher_subject_name_assistant_id_unique
+        UNIQUE (teacher_id, teacher_subject_name, assistant_id)
+);
+
+
+create table if not exists done_personal_lessons_homework (
+    id serial primary key,
+    personal_lesson_id integer not null CONSTRAINT fk_personal_lesson_id REFERENCES personal_lessons (id),
+    done_homework_file_id text not null,
+    done_homework_time timestamp not null,
+    personal_assisting_id integer not null CONSTRAINT fk_personal_assisting_id REFERENCES personal_assistings (id),
+    checked_homework_file_id text,
+    CONSTRAINT personal_lesson_id_unique UNIQUE (personal_lesson_id)
+);
+
+create or replace function preprocessing_done_personal_lessons_homework() returns trigger AS $$
+DECLARE
+    min_assistant_homeworks integer;
+    personal_lesson_info record;
+BEGIN
+    new.done_homework_time := NOW();
+    select teacher_id, subject_name from personal_lessons
+        where id = new.personal_lesson_id into personal_lesson_info;
+    IF new.personal_assisting_id is NULL THEN
+        select min(assistings_count.count) from
+            (select count(*) as count from personal_assistings as pa
+                LEFT JOIN
+                    (select * from done_personal_lessons_homework as dplh
+                        JOIN personal_lessons as pl ON dplh.personal_lesson_id = pl.id) as edplh ON 
+                pa.id = edplh.personal_assisting_id
+            where pa.teacher_id = personal_lesson_info.teacher_id 
+                AND pa.teacher_subject_name = personal_lesson_info.subject_name and pa.available = True
+                    GROUP BY pa.assistant_id)
+            as assistings_count
+        into min_assistant_homeworks;
+        IF min_assistant_homeworks is NULL then
+            RAISE exception 'No assistants can check the homework or no such personal lesson'
+                USING ERRCODE = '09005';
+            return null;
+        END IF;
+        select pa.id from personal_assistings as pa
+                LEFT JOIN
+                    (select * from done_personal_lessons_homework as dplh
+                        JOIN personal_lessons as pl ON dplh.personal_lesson_id = pl.id) as edplh ON 
+                pa.id = edplh.personal_assisting_id
+            where pa.teacher_id = personal_lesson_info.teacher_id 
+                AND pa.teacher_subject_name = personal_lesson_info.subject_name and pa.available = True
+                    GROUP BY pa.assistant_id, pa.id
+            HAVING count(*) = min_assistant_homeworks
+        limit 1 into new.personal_assisting_id;
+    END IF;
+    return new;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_preprocessing_done_personal_lessons_homework before
+INSERT
+  ON done_personal_lessons_homework FOR EACH ROW
+EXECUTE
+  PROCEDURE preprocessing_done_personal_lessons_homework();
+
+
+create or replace function check_personal_lesson_done_homework_time() returns trigger AS $$
+DECLARE
+    homework_deadline_time_var TIMESTAMP;
+BEGIN
+    select homework_deadline_time from personal_lessons where id = new.personal_lesson_id
+        into homework_deadline_time_var;
+    IF homework_deadline_time_var is not null and new.done_homework_time > homework_deadline_time_var then
+        RAISE exception 'Done homework time more than webinars deadline time: %', homework_deadline_time_var
+            USING ERRCODE = '09007';
+        return null;
+    end IF;
+    return null;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_check_personal_lesson_done_homework_time after
+INSERT
+  ON done_personal_lessons_homework FOR EACH ROW
+EXECUTE
+  PROCEDURE check_personal_lesson_done_homework_time();
