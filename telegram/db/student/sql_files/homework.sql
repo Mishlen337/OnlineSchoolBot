@@ -9,3 +9,7 @@ insert into done_personal_lessons_homework (personal_lesson_id, done_homework_fi
 --name: turn_in_webinar_homework
 insert into done_webinars_homework (webinar_id, student_id, done_homework_file_id)
     values (:webinar_id, (select id from students where tg_id = :tg_id limit 1), :file_id);
+
+--name: turn_in_group_homework
+insert into done_group_homework (group_id, student_id, group_lesson_id, done_homework_file_id)
+    values (:group_id, (select id from students where tg_id = :tg_id limit 1), :group_lesson_id, :file_id)

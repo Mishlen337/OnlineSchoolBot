@@ -45,3 +45,7 @@ class DeadlineError(Exception):
 
 class GroupSingUpError(UniqueError):
     pass
+
+
+class NoSuchGroupLessonOrNoAssistants(Exception):
+    pass

@@ -51,9 +51,41 @@ async def turn_in_webinar_homework(tg_id, webinar_id, file_id):
     except asyncpg.exceptions.UnknownPostgresError:
         await conn.close()
         raise exceptions.NoSuchWebinarOrNoAssistants()
+    except asyncpg.exceptions.ForeignKeyViolationError:
+        await conn.close()
+        raise exceptions.AccessError()
     except asyncpg.exceptions.TriggeredActionError:
         await conn.close()
         raise exceptions.DeadlineError()
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()
+
+
+async def turn_in_group_homework(tg_id, group_id, group_lesson_id, file_id):
+    conn = None
+    query = aiosql.from_path(
+        "./telegram/db/student/sql_files/homework.sql", driver_adapter="asyncpg")
+
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        result = await query.turn_in_group_homework(
+            conn, tg_id=tg_id, group_id=group_id, group_lesson_id=group_lesson_id, file_id=file_id)
+        await conn.close()
+        return result
+    except asyncpg.exceptions.UniqueViolationError:
+        await conn.close()
+        raise exceptions.DoneHomeworkExists()
+    except asyncpg.exceptions.UnknownPostgresError:
+        await conn.close()
+        raise exceptions.NoSuchGroupLessonOrNoAssistants()
+    except asyncpg.exceptions.TriggeredActionError:
+        await conn.close()
+        raise exceptions.DeadlineError()
+    except asyncpg.exceptions.ForeignKeyViolationError:
+        await conn.close()
+        raise exceptions.AccessError()
     except (asyncpg.PostgresConnectionError, OSError):
         if conn:
             await conn.close()
