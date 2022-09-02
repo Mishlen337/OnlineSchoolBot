@@ -1,7 +1,7 @@
 
 
 --name: get_basket_content
-select c.name as course_name, c.subject_name,
+select c.id as course_id, c.name as course_name, c.subject_name,
        e.name as teacher_name, e.patronymic as teacher_patronymic, e.surname as teacher_surname,
        ocp.package_name, ocp.old_price as price
     from order_course_package as ocp

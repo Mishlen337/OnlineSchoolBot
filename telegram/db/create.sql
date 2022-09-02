@@ -69,6 +69,7 @@ create TABLE if not exists personal_lessons (
 create or replace function check_personal_lesson_intersection() returns trigger AS $$
 DECLARE
     count_personal_lesson_intersects integer;
+    count_group_lesson_intersects integer;
     count_webinar_intersects integer;
 BEGIN
     SELECT count(*) FROM personal_lessons WHERE teacher_id = new.teacher_id AND
@@ -76,6 +77,15 @@ BEGIN
                                               or 
                                               begin_at >= new.begin_at and begin_at <= new.end_at)
         into count_personal_lesson_intersects;
+
+    SELECT count(*) FROM group_lessons as gl
+            join groups as g on gl.group_id = g.id
+            join courses as c on g.course_id = c.id
+        where c.teacher_id = new.teacher_id and
+                                              (gl.begin_at <= new.begin_at AND gl.end_at >= new.begin_at
+                                              or 
+                                              gl.begin_at >= new.begin_at and gl.begin_at <= new.end_at)
+        into count_group_lesson_intersects;
 
    SELECT count(*) FROM webinars AS w JOIN courses as c ON w.course_id = c.id 
                                 where c.teacher_id = new.teacher_id and 
@@ -89,6 +99,13 @@ BEGIN
             USING ERRCODE = '09001';
         return null;
     end if;
+
+    if count_group_lesson_intersects > 0 THEN
+        RAISE EXCEPTION 'Personal lesson intersects with group lessons. teacher id: %', new.teacher_id
+            USING ERRCODE = '09001';
+        return null;
+    end if;
+
     if count_webinar_intersects > 0 then
         RAISE EXCEPTION 'Personal lesson intersects with webinars. teacher id: %', new.teacher_id
             USING ERRCODE = '09002';
@@ -244,41 +261,52 @@ DECLARE
     st integer;
     webinar_teacher_id integer;
     count_personal_lesson_intersects integer;
+    count_group_lesson_intersects integer;
     count_webinar_intersects integer;
     w record;
 BEGIN
+    -- intersections
     SELECT teacher_id from courses where id = new.course_id into webinar_teacher_id;
     SELECT count(*) FROM personal_lessons WHERE teacher_id = webinar_teacher_id AND
                                              (begin_at <= new.begin_at AND end_at >= new.begin_at
                                               or 
                                               begin_at >= new.begin_at and begin_at <= new.end_at)
         into count_personal_lesson_intersects;
+    
+    SELECT count(*) FROM group_lessons as gl
+            join groups as g on gl.group_id = g.id
+            join courses as c on g.course_id = c.id
+        where c.teacher_id = webinar_teacher_id and
+                                              (gl.begin_at <= new.begin_at AND gl.end_at >= new.begin_at
+                                              or 
+                                              gl.begin_at >= new.begin_at and gl.begin_at <= new.end_at)
+        into count_group_lesson_intersects;
+    
+
     SELECT count(*) FROM webinars where course_id in (select id from courses where teacher_id=webinar_teacher_id) and 
                                       (begin_at <= new.begin_at AND end_at >= new.begin_at
                                        or
                                        begin_at >= new.begin_at and begin_at <= new.end_at)
         into count_webinar_intersects;
-    
-    FOR w in select * FROM webinars  where course_id in (select id from courses where teacher_id=webinar_teacher_id) and 
-                                      (begin_at <= begin_at AND end_at >= new.begin_at
-                                       or
-                                       begin_at >= new.begin_at and begin_at <= new.end_at)
-    LOOP
-        BEGIN
-            RAISE NOTICE '%   ', w;
-        end;
-    end Loop;
 
     if count_personal_lesson_intersects > 0 then
         RAISE exception 'Webinar intersects with personal lessons. teacher id: %', webinar_teacher_id
             USING ERRCODE = '09003';
         return null;
     end IF;
+
+    if count_group_lesson_intersects > 0 then 
+        RAISE exception 'Webinar intersects with gropup lessons. teacher id: %', webinar_teacher_id
+            USING ERRCODE = '09003';
+        return null;
+    end IF;
+
     if count_webinar_intersects > 1 then
         RAISE exception 'Webinar intersects with other webinars. teacher id: %', webinar_teacher_id
             USING ERRCODE = '09004';
         return null;
     end if;
+    -- adding to purchase webinars
     FOR st in select ocp.student_id from order_course_package as ocp join orders as o on ocp.order_id = o.id
                where o.status = 'оплачено' and course_id = new.course_id
     LOOP
@@ -377,9 +405,11 @@ create or replace function check_webinar_done_homework_time() returns trigger AS
 DECLARE
     homework_deadline_time_var TIMESTAMP;
 BEGIN
+    select homework_deadline_time from webinars where id = new.webinar_id
+        into homework_deadline_time_var;
     IF homework_deadline_time_var is not null and new.done_homework_time > homework_deadline_time_var then
         RAISE exception 'Done homework time more than webinars deadline time: %', homework_deadline_time_var
-            USING ERRCODE = '09007';
+            USING ERRCODE = '09000';
         return null;
     end IF;
     return null;
@@ -480,7 +510,7 @@ BEGIN
         into homework_deadline_time_var;
     IF homework_deadline_time_var is not null and new.done_homework_time > homework_deadline_time_var then
         RAISE exception 'Done homework time more than webinars deadline time: %', homework_deadline_time_var
-            USING ERRCODE = '09007';
+            USING ERRCODE = '09000';
         return null;
     end IF;
     return null;
@@ -493,3 +523,188 @@ INSERT
   ON done_personal_lessons_homework FOR EACH ROW
 EXECUTE
   PROCEDURE check_personal_lesson_done_homework_time();
+
+
+
+create table if not exists group_types (
+    type varchar(50) primary key
+);
+
+create table if not exists groups (
+    id serial primary key,
+    type varchar(50) not null constraint fk_groups REFERENCES group_types(type),
+    course_id integer not null constraint fk_courses REFERENCES courses(id),
+    tg_group_link text,
+    CONSTRAINT course_id_type_unique UNIQUE(course_id, type)
+);
+
+create table if not exists group_student (
+    student_id integer not null CONSTRAINT fk_students REFERENCES students(id),
+    group_id integer not null CONSTRAINT fk_groups REFERENCES groups(id),
+    PRIMARY KEY (student_id, group_id)
+);
+
+create or replace function group_membership_check() returns trigger AS $$
+DECLARE
+    course_pro_purchase integer;
+BEGIN
+    select count(*) from groups as g
+        join courses as c on g.course_id = c.id
+        join order_course_package as ocp on c.id = ocp.course_id
+        join orders as o on ocp.order_id = o.id
+    where o.status = 'оплачено' and o.student_id = new.student_id and
+          g.id = new.group_id and ocp.package_name = 'про' into course_pro_purchase;
+    IF course_pro_purchase = 0 then
+        RAISE exception 'student is not allowed to be in this group' USING ERRCODE = '09000';
+        return null;
+    END IF;
+    return new;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_group_membership_check before 
+INSERT OR UPDATE
+  ON group_student FOR EACH ROW
+EXECUTE
+  PROCEDURE group_membership_check();
+
+create table if not exists group_lessons (
+    id serial primary key,
+    theme varchar(255) not null ,
+    group_id integer not null constraint fk_groups REFERENCES groups(id),
+    begin_at TIMESTAMP not null,
+    end_at TIMESTAMP not null,
+    broadcast_link text,
+    material_link text,
+    record_link text,
+    homework_link text,
+    homework_deadline_time timestamp,
+    CONSTRAINT date_check CHECK (begin_at < end_at)
+);
+
+
+create or replace function check_group_lessons_intersection() returns trigger AS $$
+DECLARE
+    st integer;
+    group_teacher_id integer;
+    count_personal_lesson_intersects integer;
+    count_webinar_intersects integer;
+    w record;
+BEGIN
+    SELECT c.teacher_id from groups as g 
+        join courses as c on g.course_id = c.id where g.id = new.group_id into group_teacher_id;
+
+    SELECT count(*) FROM personal_lessons WHERE teacher_id = group_teacher_id AND
+                                             (begin_at <= new.begin_at AND end_at >= new.begin_at
+                                              or 
+                                              begin_at >= new.begin_at and begin_at <= new.end_at)
+        into count_personal_lesson_intersects;
+
+    SELECT count(*) FROM webinars where course_id in (select id from courses where teacher_id=group_teacher_id) and 
+                                      (begin_at <= new.begin_at AND end_at >= new.begin_at
+                                       or
+                                       begin_at >= new.begin_at and begin_at <= new.end_at)
+        into count_webinar_intersects;
+
+    if count_personal_lesson_intersects > 0 then
+        RAISE exception 'Webinar intersects with personal lessons. teacher id: %', group_teacher_id
+            USING ERRCODE = '09003';
+        return null;
+    end IF;
+
+    if count_webinar_intersects > 0 then
+        RAISE exception 'Webinar intersects with other webinars. teacher id: %', group_teacher_id
+            USING ERRCODE = '09004';
+        return null;
+    end if;
+    return new;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_check_group_lessons_intersection after
+INSERT or UPDATE
+  ON group_lessons FOR EACH ROW
+EXECUTE
+  PROCEDURE check_group_lessons_intersection();
+
+
+create table if not exists done_group_homework(
+    id serial primary key,
+    group_id integer not null,
+    student_id integer not null,
+    group_lesson_id integer not null,
+    assistant_id integer not null,
+    course_id integer not null,
+    done_homework_file_id text not null,
+    done_homework_time TIMESTAMP not null,
+    checked_homework_file_id text,
+    constraint fk_group_student FOREIGN KEY (group_id, student_id)
+        REFERENCES group_student(group_id, student_id),
+    CONSTRAINT fk_course_assistings FOREIGN KEY (assistant_id, course_id) REFERENCES course_assistings(assistant_id, course_id),
+    CONSTRAINT group_lesson_id_student_id_unique UNIQUE (group_lesson_id, student_id)
+);
+
+
+create or replace function preprocessing_done_group_homework() returns trigger AS $$
+DECLARE
+    min_assistant_homeworks integer;
+    group_course_id integer;
+BEGIN
+    new.done_homework_time := NOW();
+
+    IF new.assistant_id is NULL AND new.course_id is NULL THEN
+        select g.course_id from group_lessons as gl
+            join groups as g on gl.group_id = g.id
+            where gl.id = new.group_lesson_id into group_course_id;
+
+        new.course_id := group_course_id;
+        select min(assistings_count.count) from
+            (select count(*) as count from course_assistings as ca
+                LEFT JOIN done_group_homework as dgh ON ca.assistant_id = dgh.assistant_id and ca.course_id = dgh.course_id
+            where ca.course_id = group_course_id and ca.available = True GROUP BY ca.assistant_id)
+                as assistings_count
+        into min_assistant_homeworks;
+        IF min_assistant_homeworks is NULL then
+            RAISE exception 'No assistants can check the homework or no such group lesson'
+                USING ERRCODE = '09005';
+            return null;
+        END IF;
+        select ca.assistant_id from course_assistings as ca
+            LEFT JOIN done_group_homework as dgh ON ca.assistant_id = dgh.assistant_id and ca.course_id = dgh.course_id
+        where ca.course_id = group_course_id and ca.available = True  GROUP BY ca.assistant_id HAVING count(*) = min_assistant_homeworks
+        limit 1 into new.assistant_id;
+    END IF;
+    return new;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_preprocessing_done_group_homework before
+INSERT
+  ON done_group_homework FOR EACH ROW
+EXECUTE
+  PROCEDURE preprocessing_done_group_homework();
+
+create or replace function check_group_lesson_done_homework_time() returns trigger AS $$
+DECLARE
+    homework_deadline_time_var TIMESTAMP;
+BEGIN
+    select homework_deadline_time from group_lessons where id = new.group_lesson_id
+        into homework_deadline_time_var;
+    IF homework_deadline_time_var is not null and new.done_homework_time > homework_deadline_time_var then
+        RAISE exception 'Done homework time more than webinars deadline time: %', homework_deadline_time_var
+            USING ERRCODE = '09000';
+        return null;
+    end IF;
+    return null;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE TRIGGER tr_check_group_lesson_done_homework_time after
+INSERT
+  ON done_group_homework FOR EACH ROW
+EXECUTE
+  PROCEDURE check_group_lesson_done_homework_time();

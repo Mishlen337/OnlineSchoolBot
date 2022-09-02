@@ -39,7 +39,19 @@ SCHEDULE_INFO_WEBINARS = '''
 Ссылка на вебинар: <b>{broadcast_link}</b>
 '''
 
-INFO_COURSE_MATERIALS = '''
+SCHEDULE_INFO_GROUP_LESSONS = '''
+Курс: <b>{course_name}</b>
+Группа: <b>{group_type}<b>
+Тема: <b>{theme}</b>
+Предмет: <b>{subject_name}</b>
+Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
+Название предмета: <b>{subject_name}</b>
+Начало: <b>{begin_at}</b>
+Окончание: <b>{end_at}</b>
+Ссылка на вебинар: <b>{broadcast_link}</b>
+'''
+
+INFO_WEBINAR_COURSE_MATERIALS = '''
 Курс: <b>{course_name}</b>
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
 '''
@@ -73,4 +85,18 @@ INFO_PERSONAL_LESSONS = '''
 INFO_PERSONAL_TEACHERS = '''
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
 Предмет: <b>{subject_name}</b>
+'''
+
+INFO_GROUP_COURSE_MATERIALS = '''
+Курс: <b>{course_name}</b>
+Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
+'''
+
+INFO_GROUP_LESSONS = '''
+Тема: <b>{theme}</b>
+Начало: <b>{begin_at}</b>
+Конец: <b>{end_at}</b>
+Ссылка: <b>{record_link}</b>
+Конспект: <b>{material_link}</b>
+Домашнее задание: <b>{homework_link}</b>
 '''

@@ -12,3 +12,12 @@ select pl.id as personal_lesson_id, pl.begin_at, pl.end_at, pl.record_link, pl.m
                                 join employees as e on pl.teacher_id = e.id
     where s.tg_id = :tg_id and pl.teacher_id = :teacher_id and pl.subject_name = :subject_name
 order by pl.begin_at;
+
+--name: get_group_lessons_materials
+select gl.theme, gl.begin_at, gl.end_at, gl.record_link, gl.material_link, gl.homework_link, gl.homework_deadline_time
+     from group_lessons as gl
+        join groups as g on gl.group_id = g.id
+        join group_student as gs on g.id = gs.group_id
+        join students as s on gs.student_id = s.id
+    where g.course_id = :course_id and s.tg_id = :tg_id
+order by gl.begin_at;

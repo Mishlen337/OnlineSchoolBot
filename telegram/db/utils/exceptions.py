@@ -37,3 +37,11 @@ class NoSuchLessonOrNoAssistants(Exception):
 
 class NoSuchWebinarOrNoAssistants(Exception):
     pass
+
+
+class DeadlineError(Exception):
+    pass
+
+
+class GroupSingUpError(UniqueError):
+    pass

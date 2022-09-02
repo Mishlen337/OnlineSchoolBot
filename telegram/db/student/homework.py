@@ -51,6 +51,9 @@ async def turn_in_webinar_homework(tg_id, webinar_id, file_id):
     except asyncpg.exceptions.UnknownPostgresError:
         await conn.close()
         raise exceptions.NoSuchWebinarOrNoAssistants()
+    except asyncpg.exceptions.TriggeredActionError:
+        await conn.close()
+        raise exceptions.DeadlineError()
     except (asyncpg.PostgresConnectionError, OSError):
         if conn:
             await conn.close()

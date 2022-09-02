@@ -4,6 +4,7 @@ from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 
 from db.student import order
+from db.student import course
 from db.utils import exceptions
 
 from core.utils.messages import BASKET_INFO_COURSE
@@ -82,9 +83,18 @@ async def checkout_process(pre_checkout_query: types.PreCheckoutQuery):
 async def successful_payment(message: types.Message):
     text = message.successful_payment
     try:
+        basket_content = await order.get_basket_content(message.from_user.id)
         await order.purchase_basket(message.from_user.id)
         await message.answer(f"Оплата на сумму {text.total_amount // 100} {text.currency} прошла успешно",
                              parse_mode='HTML', reply_markup=all_keyboards["menu"]())
+
+        for order_course_package in basket_content:
+            if order_course_package["package_name"] == 'про':
+                await message.answer(
+                    f"Вам необходимо выбрать группу обучения на курсе <b>{order_course_package['course_name']}</b>.",
+                    parse_mode="HTML",
+                    reply_markup=await all_keyboards["choose_course_groups"](
+                        message.from_user.id, order_course_package["course_id"]))
     except exceptions.ConnectionError:
         await message.answer("Упс. Что-то пошло не так")
 
@@ -97,3 +107,18 @@ async def clear_basket(message: types.Message):
         await message.answer("Корзина очищена", reply_markup=all_keyboards["menu"]())
     except exceptions.ConnectionError:
         await message.answer("Упс. Что-то пошло не так")
+
+
+async def choose_group(callback: types.CallbackQuery):
+    logger.debug(f"Student {callback.from_user} chose group.")
+    tg_id, group_id = map(int, callback.data.split(':')[1:])
+    try:
+        await course.group_sign_up(tg_id, group_id)
+    except exceptions.AccessError:
+        await callback.answer("У вас не прав записаться в группу.")
+    except exceptions.GroupSingUpError:
+        await callback.answer("Вы уже записались в группу.")
+    except exceptions.ConnectionError:
+        await callback.message.answer("Упс. Что-то пошло не так")
+    await callback.message.edit_text(
+        callback.message.text + "Вы успешно записались в группу.")
