@@ -49,3 +49,10 @@ class GroupSingUpError(UniqueError):
 
 class NoSuchGroupLessonOrNoAssistants(Exception):
     pass
+
+
+class AuthError(Exception):
+    pass
+
+class FormatError(Exception):
+    pass

@@ -22,17 +22,62 @@ async def tg_auth(tg_id):
         raise exceptions.ConnectionError()
 
 
-async def info_init(tg_id, name, patronymic, surname, email, class_num):
-    "Initializes information about student"
+async def telephone_init(tg_id, telephone: str):
+    "Initializes telephone information about student"
     conn = None
     query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
 
     try:
         conn = await asyncpg.connect(config.DB_URI)
-        await query.info_init(conn, tg_id=tg_id, name=name, patronymic=patronymic, surname=surname,
-                              email=email,
-                              class_num=class_num)
+        await query.telephone_init(conn, tg_id=tg_id, telephone=telephone)
         await conn.close()
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()
+
+
+async def fio_init(tg_id, name, patronymic, surname):
+    conn = None
+    query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
+
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        await query.fio_init(conn, tg_id=tg_id,
+                             name=name, patronymic=patronymic, surname=surname)
+        await conn.close()
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()
+
+
+async def class_num_init(tg_id, class_num):
+    conn = None
+    query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
+
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        await query.class_num_init(conn, tg_id=tg_id, class_num=class_num)
+        await conn.close()
+    except asyncpg.exceptions.CheckViolationError:
+        await conn.close()
+        raise exceptions.FormatError()
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()
+
+
+async def get_user_info(tg_id):
+    conn = None
+    query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
+
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        result = await query.get_user_info(conn, tg_id=tg_id)
+        await conn.close()
+        return result
     except (asyncpg.PostgresConnectionError, OSError):
         if conn:
             await conn.close()

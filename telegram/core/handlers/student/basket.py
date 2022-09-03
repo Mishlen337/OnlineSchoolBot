@@ -47,7 +47,7 @@ async def get_basket(message: types.Message, state: FSMContext):
                 teacher_surname=crs['teacher_surname'],
                 package=crs['package_name'],
                 price=crs['price']
-            )
+            ) + '\n'
         msg_text += '<b>Скидка: 10%</b>'
         await message.answer(text=msg_text, parse_mode='HTML')
 
