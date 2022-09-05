@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     TG_HOST: str
     HOST_PORT: int
     MODERATOR_TG_ID: int
+    TERMS_PATH: str
 
     class Config:
         env_file = "../.env"

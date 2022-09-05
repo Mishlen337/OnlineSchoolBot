@@ -88,14 +88,32 @@ def kb_materials(tg_id: int):
     return kb_student
 
 
-def kb_show_course_materials(tg_id, course_id: int):
+def kb_show_webinar_materials(tg_id, course_id: int):
     kb_student = InlineKeyboardMarkup()
-    keyboard_utils.add_course_materials(kb_student, tg_id, course_id)
+    keyboard_utils.add_webinar_materials(kb_student, tg_id, course_id)
     return kb_student
+
 
 def kb_show_personal_materials(tg_id, teacher_id: int, subject_name: str):
     kb_student = InlineKeyboardMarkup()
     keyboard_utils.add_personal_materials(kb_student, tg_id, teacher_id, subject_name)
+    return kb_student
+
+
+def kb_show_group_materials(tg_id, course_id: int):
+    kb_student = InlineKeyboardMarkup()
+    keyboard_utils.add_group_materials(kb_student, tg_id, course_id)
+    return kb_student
+
+def kb_pass_homework(tg_id, id: int, tip: str, group_lesson_id=None):
+    kb_student = InlineKeyboardMarkup()
+    keyboard_utils.add_homework(kb_student, tg_id, id, tip, group_lesson_id)
+    return kb_student
+
+
+async def kb_choose_course_groups(tg_id, course_id: int):
+    kb_student = InlineKeyboardMarkup()
+    await keyboard_utils.add_course_groups(kb_student, tg_id, course_id)
     return kb_student
 
 all_keyboards["menu"] = kb_student_menu
@@ -106,5 +124,8 @@ all_keyboards["course_desc"] = kb_course_desc
 all_keyboards["personal_select_with_desc"] = kb_personal_select_with_desc
 all_keyboards["personal_select_without_desc"] = kb_personal_select_without_desc
 all_keyboards["materials"] = kb_materials
-all_keyboards["show_course_materials"] = kb_show_course_materials
+all_keyboards["show_webinar_materials"] = kb_show_webinar_materials
 all_keyboards["show_personal_materials"] = kb_show_personal_materials
+all_keyboards["show_group_materials"] = kb_show_group_materials
+all_keyboards["choose_course_groups"] = kb_choose_course_groups
+all_keyboards["pass_homework"] = kb_pass_homework

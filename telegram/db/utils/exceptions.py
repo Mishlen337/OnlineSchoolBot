@@ -11,7 +11,7 @@ class OrderCourseExists(UniqueError):
     pass
 
 
-class StudentExists(UnicodeError):
+class StudentExists(UniqueError):
     pass
 
 
@@ -20,4 +20,39 @@ class NoSuchCoursePackage(Exception):
 
 
 class NoSuchTutor(Exception):
+    pass
+
+
+class AccessError(Exception):
+    pass
+
+
+class DoneHomeworkExists(UniqueError):
+    pass
+
+
+class NoSuchLessonOrNoAssistants(Exception):
+    pass
+
+
+class NoSuchWebinarOrNoAssistants(Exception):
+    pass
+
+
+class DeadlineError(Exception):
+    pass
+
+
+class GroupSingUpError(UniqueError):
+    pass
+
+
+class NoSuchGroupLessonOrNoAssistants(Exception):
+    pass
+
+
+class AuthError(Exception):
+    pass
+
+class FormatError(Exception):
     pass
