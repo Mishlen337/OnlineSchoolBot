@@ -9,7 +9,7 @@ def setup(dp: Dispatcher):
     "Setups all handlers."
     logger.debug("Start base handler registration.")
     dp.register_message_handler(commands_handler,
-                                commands=["start", "stop", "help", "getlink"], state="*")
+                                commands=["start", "stop", "help", "getlink", "terms"], state="*")
     student.setup(dp)
     employee.setup(dp)
     moderator.setup(dp)

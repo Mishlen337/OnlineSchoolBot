@@ -2,12 +2,11 @@
 
 CREATE TABLE IF NOT EXISTS employees (
     id SERIAL PRIMARY key,
-    email varchar(255) not null unique,
     tg_id BIGINT unique,
     name varchar(50) not null,
     patronymic varchar(50),
     surname varchar(50) not null,
-    telephone char(11) not null,
+    telephone varchar(50) not null unique,
     description varchar(1000)
 );
 
@@ -39,7 +38,7 @@ create table IF not EXISTS employee_subject (
 
 create table if not EXISTS students (
     id serial PRIMARY key,
-    email varchar(255) unique,
+    telephone varchar(50) unique,
     tg_id BIGINT not null unique,
     name varchar(50),
     patronymic varchar(50),

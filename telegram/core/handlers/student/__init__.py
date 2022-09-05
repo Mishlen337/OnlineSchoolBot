@@ -3,7 +3,7 @@ from aiogram import Dispatcher
 from aiogram import types
 from loguru import logger
 from core.filters.guest_filters import CallBackFilter
-from . import courses, personal_lessons, personal_schedule, basket, materials
+from . import courses, personal_lessons, personal_schedule, basket, materials, auth
 
 def setup(dp: Dispatcher):
     "Setups handlers for student."
@@ -16,12 +16,23 @@ def setup(dp: Dispatcher):
                                 state="student_main")
     dp.register_message_handler(personal_schedule.get_schedule, regexp="Занятия",
                                 state="student_main")
-    dp.register_message_handler(basket.get_basket, regexp="Корзина",
+    dp.register_message_handler(auth.precheckout_basket, regexp="Корзина",
                                 state="student_main")
     dp.register_message_handler(basket.clear_basket, regexp="Очистить корзину",
                                 state="student_main")
     dp.register_message_handler(materials.get_materials, regexp="Материалы",
                                 state="student_main")
+
+    # auth
+    dp.register_message_handler(auth.get_contact,
+                                content_types="contact",
+                                state="student_telephone")
+    dp.register_message_handler(auth.get_contact_error,
+                                state="student_telephone")
+    dp.register_message_handler(auth.get_fio,
+                                state="student_fio")
+    dp.register_message_handler(auth.get_class_num,
+                                state="student_class_num")
 
     # course order
     dp.register_callback_query_handler(courses.callback_desc, CallBackFilter("course_desc"),
