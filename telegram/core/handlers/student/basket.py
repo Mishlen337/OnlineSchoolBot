@@ -2,6 +2,7 @@
 from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
+from aiogram.utils.exceptions import MessageCantBeDeleted
 
 from db.student import order
 from db.student import course
@@ -26,9 +27,12 @@ async def get_basket(message: types.Message, state: FSMContext):
         try:
             message_id = await order.get_order_course_package_message_ids(tg_id=message.from_user.id)
             for id in message_id:
-                if id["message_id"] != None:
-                    await bot.delete_message(chat_id=message.chat.id,message_id=id["message_id"])
-                    break
+                if id["message_id"] is not None:
+                    try:
+                        await bot.delete_message(chat_id=message.chat.id, message_id=id["message_id"])
+                        break
+                    except MessageCantBeDeleted:
+                        break
         except ConnectionError:
             await message.answer("Упс. Что-то пошло не так")
         await message.answer("Курсы в корзине: ",
@@ -38,7 +42,7 @@ async def get_basket(message: types.Message, state: FSMContext):
         for crs in courses_list:
             course_prices.append(
                 types.LabeledPrice(
-                    label=f"{crs['course_name']} - {crs['package_name']}", amount=crs['price']*100))
+                    label=f"{crs['course_name']} - {crs['package_name']}", amount=crs['price'] * 100))
             msg_text += BASKET_INFO_COURSE.format(
                 course_name=crs['course_name'],
                 subject_name=crs['subject_name'],
@@ -53,13 +57,13 @@ async def get_basket(message: types.Message, state: FSMContext):
 
         # course_prices.append(types.LabeledPrice(label='Скидка', amount=-100))
         send_message = await bot.send_invoice(message.chat.id,
-                               title='Выбранные курсы',
-                               description=' ',
-                               provider_token=config.PAYMENTS_SECRET,
-                               currency='rub',
-                               prices=course_prices,
-                               payload='pay-course-basket',
-                               start_parameter='basket')
+                                              title='Выбранные курсы',
+                                              description=' ',
+                                              provider_token=config.PAYMENTS_SECRET,
+                                              currency='rub',
+                                              prices=course_prices,
+                                              payload='pay-course-basket:'+str(message.message_id + 3),
+                                              start_parameter='basket')
         await order.update_order_course_package_message_ids(tg_id=message.from_user.id,
                                                             message_id=send_message.message_id)
     else:
@@ -70,12 +74,13 @@ async def checkout_process(pre_checkout_query: types.PreCheckoutQuery):
     try:
         message_id = await order.get_order_course_package_message_ids(tg_id=pre_checkout_query.from_user.id)
         ok = True
+        check = int(pre_checkout_query.invoice_payload.split(':')[1])
         for id in message_id:
-            if id["message_id"] == None:
+            if id["message_id"] != check:
                 ok = False
                 break
         await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=ok,
-            error_message="Упс. Что-то пошло не так. Очистите корзину и попробуйте заново")
+                                            error_message="Упс. Что-то пошло не так. Очистите корзину и попробуйте заново")
     except ConnectionError:
         await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=False, error_message="Упс. Что-то пошло не так")
 
@@ -102,12 +107,14 @@ async def successful_payment(message: types.Message):
 async def clear_basket(message: types.Message):
     try:
         message_id = await order.get_order_course_package_message_ids(tg_id=message.chat.id)
-        await bot.delete_message(chat_id=message.chat.id, message_id=message_id[0]["message_id"])
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message_id[0]["message_id"])
+        except MessageCantBeDeleted:
+            pass
         await order.delete_basket(message.from_user.id)
         await message.answer("Корзина очищена", reply_markup=all_keyboards["menu"]())
     except exceptions.ConnectionError:
         await message.answer("Упс. Что-то пошло не так")
-
 
 async def choose_group(callback: types.CallbackQuery):
     logger.debug(f"Student {callback.from_user} chose group.")

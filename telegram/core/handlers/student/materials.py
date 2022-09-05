@@ -2,17 +2,15 @@ from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
 from core.keyboards.student_keyboards import all_keyboards
+
 from db.student import course
 from db.student import material
 from core.utils import messages
 from db.student.personal_lesson import get_selected_personal_teachers
+from core.handlers.student.handlers_utils import formatting
 from db.student import homework
 from db.utils import exceptions
 import datetime
-
-def formatting(string: str) -> str:
-    state, change = map(str, string.split(':'))
-    return state + ': ' + '<b>' + change + '</b>' + '\n'
 
 
 async def get_materials(message: types.Message, state: FSMContext):
