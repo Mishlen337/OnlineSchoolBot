@@ -6,7 +6,9 @@ from db.student import course
 from db.student import material
 from core.utils import messages
 from db.student.personal_lesson import get_selected_personal_teachers
-
+from db.student import homework
+from db.utils import exceptions
+import datetime
 
 def formatting(string: str) -> str:
     state, change = map(str, string.split(':'))
@@ -74,7 +76,8 @@ async def get_webinar(callback: types.CallbackQuery, state: FSMContext):
                     end_at=web["end_at"].strftime("%d-%m-%Y %H:%M"),
                     record_link=web["record_link"] if web["record_link"] is not None else '-',
                     material_link=web["material_link"] if web["material_link"] is not None else '-',
-                    homework_link=web["homework_link"] if web["homework_link"] is not None else '-'
+                    homework_link=web["homework_link"] if web["homework_link"] is not None else '-',
+                    homework_deadline_time=web["homework_deadline_time"] if web["homework_deadline_time"] is not None else '-'
                 )
             else:
                 text = messages.INFO_WEBINARS_RECORD.format(
@@ -82,9 +85,16 @@ async def get_webinar(callback: types.CallbackQuery, state: FSMContext):
                     format=web["format"],
                     record_link=web["record_link"] if web["record_link"] is not None else '-',
                     material_link=web["material_link"] if web["material_link"] is not None else '-',
-                    homework_link=web["homework_link"] if web["homework_link"] is not None else '-'
+                    homework_link=web["homework_link"] if web["homework_link"] is not None else '-',
+                    homework_deadline_time=web["homework_deadline_time"] if web["homework_deadline_time"] is not None else '-'
                 )
-            await callback.message.answer(text=text, parse_mode='HTML', disable_web_page_preview=True)
+            await callback.message.answer(
+                text=text,
+                parse_mode='HTML',
+                disable_web_page_preview=True,
+                reply_markup=all_keyboards["pass_homework"](tg_id, web["webinar_id"], 'web')
+                if web["homework_link"] is not None and datetime.datetime.now() <= web["homework_deadline_time"] else None
+            )
         await callback.answer()
     else:
         await callback.message.answer("Упс. Что-то пошло не так")
@@ -143,9 +153,16 @@ async def get_personal_lessons(callback: types.CallbackQuery, state: FSMContext)
                 end_at=pers["end_at"].strftime("%d-%m-%Y %H:%M"),
                 record_link=pers["record_link"] if pers["record_link"] is not None else '-',
                 material_link=pers["material_link"] if pers["material_link"] is not None else '-',
-                homework_link=pers["homework_link"] if pers["homework_link"] is not None else '-'
+                homework_link=pers["homework_link"] if pers["homework_link"] is not None else '-',
+                homework_deadline_time=pers["homework_deadline_time"] if pers["homework_deadline_time"] is not None else '-'
             )
-            await callback.message.answer(text=text, parse_mode='HTML', disable_web_page_preview=True)
+            await callback.message.answer(
+                text=text,
+                parse_mode='HTML',
+                disable_web_page_preview=True,
+                reply_markup=all_keyboards["pass_homework"](tg_id, pers["personal_lesson_id"], "les")
+                if pers["homework_link"] is not None and datetime.datetime.now() <= pers["homework_deadline_time"] else None
+            )
         await callback.answer()
     else:
         await callback.message.answer("Записи уроков с данным преподавателем отсутствуют")
@@ -205,10 +222,60 @@ async def get_group_lessons(callback: types.CallbackQuery, state: FSMContext):
                 end_at=lesson["end_at"].strftime("%d-%m-%Y %H:%M"),
                 record_link=lesson["record_link"] if lesson["record_link"] is not None else '-',
                 material_link=lesson["material_link"] if lesson["material_link"] is not None else '-',
-                homework_link=lesson["homework_link"] if lesson["homework_link"] is not None else '-'
+                homework_link=lesson["homework_link"] if lesson["homework_link"] is not None else '-',
+                homework_deadline_time=lesson["homework_deadline_time"] if lesson["homework_deadline_time"] is not None else '-'
             )
-            await callback.message.answer(text=text, parse_mode='HTML', disable_web_page_preview=True)
+            await callback.message.answer(
+                text=text,
+                parse_mode='HTML',
+                disable_web_page_preview=True,
+                reply_markup=all_keyboards["pass_homework"](tg_id,  lesson["group_id"], "group", lesson["group_lesson_id"])
+                if lesson["homework_link"] is not None and datetime.datetime.now() <= lesson["homework_deadline_time"] else None
+            )
+            logger.debug(datetime.datetime.now() <= lesson["homework_deadline_time"])
         await callback.answer()
     else:
         await callback.message.answer("Упс. Что-то пошло не так")
         await callback.answer()
+
+async def pass_homework(callback: types.CallbackQuery, state: FSMContext):
+    logger.debug(f"Student {callback.from_user} want pass homework in webinar")
+    mass = callback.data.split(':')
+    tip, tg_id, id, group_lesson_id = mass[1], int(mass[2]), int(mass[3]), mass[4]
+    await callback.message.answer(text="Прикрепите ДЗ")
+    await state.update_data(
+        tip=tip,
+        tg_id=tg_id,
+        id=id,
+        group_lesson_id=group_lesson_id
+    )
+    await state.set_state("pass_homework")
+    await callback.answer()
+
+async def send_homework(message: types.Message, state: FSMContext):
+    logger.debug(f"Student {message.from_user} want send homework in webinar")
+    data = await state.get_data()
+    try:
+        match data["tip"]:
+            case "web":
+                await homework.turn_in_webinar_homework(data["tg_id"], data["id"], str(message.message_id))
+            case "les":
+                await homework.turn_in_personal_lesson_homework(data["tg_id"], data["id"], str(message.message_id))
+            case "group":
+                await homework.turn_in_group_homework(data["tg_id"], data["id"], int(data["group_lesson_id"]), str(message.message_id))
+        await message.answer("Домашнее задание успешно прикреплено!")
+    except exceptions.NoSuchGroupLessonOrNoAssistants:
+        await message.answer("Данное групповое занятие или ассистент не найден")
+    except exceptions.NoSuchLessonOrNoAssistants:
+        await message.answer("Данное персональное занятие или ассистент не найден")
+    except exceptions.DeadlineError:
+        await message.answer("Дедлайн данного домашнего задания истек(")
+    except exceptions.NoSuchWebinarOrNoAssistants:
+        await message.answer("Данный вебинар или ассистент не найден")
+    except exceptions.DoneHomeworkExists:
+        await message.answer("Вы уже выполнили эту домашнюю работу")
+    except exceptions.AccessError:
+        await message.answer("У вас нет доступа к этой домашней работе")
+    except ConnectionError:
+        await message.answer("Упс. Что-то пошло не так")
+    await state.set_state("student_main")
