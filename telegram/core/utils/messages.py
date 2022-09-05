@@ -20,7 +20,7 @@ BASKET_INFO_COURSE = '''Курс: <b>{course_name}</b>
 
 
 SCHEDULE_INFO_PERSONAL = '''
-<b>Предмет: {subject_name}</b>
+Предмет: <b>{subject_name}</b>
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
 Название предмета: <b>{subject_name}</b>
 Начало: <b>{begin_at}</b>
@@ -64,6 +64,7 @@ INFO_WEBINARS_ONLINE = '''
 Ссылка: <b>{record_link}</b>
 Конспект: <b>{material_link}</b>
 Домашнее задание: <b>{homework_link}</b>
+Дедлайн дз: <b>{homework_deadline_time}</b>
 '''
 
 INFO_WEBINARS_RECORD = '''
@@ -72,6 +73,7 @@ INFO_WEBINARS_RECORD = '''
 Ссылка: <b>{record_link}</b>
 Конспект: <b>{material_link}</b>
 Домашнее задание: <b>{homework_link}</b>
+Дедлайн дз: <b>{homework_deadline_time}</b>
 '''
 
 INFO_PERSONAL_LESSONS = '''
@@ -80,6 +82,7 @@ INFO_PERSONAL_LESSONS = '''
 Ссылка: <b>{record_link}</b>
 Конспект: <b>{material_link}</b>
 Домашнее задание: <b>{homework_link}</b>
+Дедлайн дз: <b>{homework_deadline_time}</b>
 '''
 
 INFO_PERSONAL_TEACHERS = '''
@@ -99,4 +102,5 @@ INFO_GROUP_LESSONS = '''
 Ссылка: <b>{record_link}</b>
 Конспект: <b>{material_link}</b>
 Домашнее задание: <b>{homework_link}</b>
+Дедлайн дз: <b>{homework_deadline_time}</b>
 '''

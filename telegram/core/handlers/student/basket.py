@@ -115,7 +115,7 @@ async def choose_group(callback: types.CallbackQuery):
     try:
         await course.group_sign_up(tg_id, group_id)
     except exceptions.AccessError:
-        await callback.answer("У вас не прав записаться в группу.")
+        await callback.answer("У вас нет прав записаться в группу.")
     except exceptions.GroupSingUpError:
         await callback.answer("Вы уже записались в группу.")
     except exceptions.ConnectionError:

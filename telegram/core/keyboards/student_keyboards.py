@@ -105,6 +105,11 @@ def kb_show_group_materials(tg_id, course_id: int):
     keyboard_utils.add_group_materials(kb_student, tg_id, course_id)
     return kb_student
 
+def kb_pass_homework(tg_id, id: int, tip: str, group_lesson_id=None):
+    kb_student = InlineKeyboardMarkup()
+    keyboard_utils.add_homework(kb_student, tg_id, id, tip, group_lesson_id)
+    return kb_student
+
 
 async def kb_choose_course_groups(tg_id, course_id: int):
     kb_student = InlineKeyboardMarkup()
@@ -123,3 +128,4 @@ all_keyboards["show_webinar_materials"] = kb_show_webinar_materials
 all_keyboards["show_personal_materials"] = kb_show_personal_materials
 all_keyboards["show_group_materials"] = kb_show_group_materials
 all_keyboards["choose_course_groups"] = kb_choose_course_groups
+all_keyboards["pass_homework"] = kb_pass_homework
