@@ -154,7 +154,7 @@ create table if not exists packages (
 
 insert into packages values ('Based');
 insert into packages values ('Групповой');
-insert into packages values ('Индивидуальный')
+insert into packages values ('Индивидуальный');
 
 create table if not exists course_package (
     course_id integer not null CONSTRAINT fk_course references courses(id) on delete restrict,
