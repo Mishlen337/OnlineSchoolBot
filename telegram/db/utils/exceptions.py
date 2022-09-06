@@ -56,3 +56,6 @@ class AuthError(Exception):
 
 class FormatError(Exception):
     pass
+
+class CheckError(Exception):
+    pass

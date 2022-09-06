@@ -17,7 +17,7 @@ async def get_courses(message: types.Message, state: FSMContext):
     try:
         course_list = await course.get_courses(message.from_user.id)
         if course_list:
-            await message.answer("Сообщение о скидке.")
+            await message.answer("Воспользуйтесь акцией! При обучении на нескольких курсах предоставляется скидка!")
             for crs in course_list:
                 msg_text = SELECT_INFO_COURSE.format(
                     course_name=crs['course_name'],

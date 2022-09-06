@@ -5,6 +5,7 @@ from loguru import logger
 from core.filters.guest_filters import CallBackFilter
 from . import courses, personal_lessons, personal_schedule, basket, materials, auth
 
+
 def setup(dp: Dispatcher):
     "Setups handlers for student."
     logger.debug("Start student's handlers registration.")
@@ -67,7 +68,10 @@ def setup(dp: Dispatcher):
                                        state="student_main")
     dp.register_callback_query_handler(materials.pass_homework, CallBackFilter("pass_homework"),
                                        state="student_main")
-    dp.register_message_handler(materials.send_homework, state="pass_homework")
+    dp.register_message_handler(materials.send_homework, state="pass_homework", content_types=types.ContentTypes.DOCUMENT)
+    dp.register_message_handler(materials.back_to_menu, state="pass_homework", regexp="Назад")
+    dp.register_message_handler(materials.error_send_homework, state="pass_homework")
+
     # payments
     dp.register_pre_checkout_query_handler(basket.checkout_process,
                                            state="student_main")
@@ -75,8 +79,7 @@ def setup(dp: Dispatcher):
                                 content_types=types.ContentType.SUCCESSFUL_PAYMENT,
                                 state="student_main")
 
-    dp.register_callback_query_handler(basket.choose_group, CallBackFilter("choose_group"),
-                                       state="student_main")
+    # dp.register_callback_query_handler(basket.choose_group, CallBackFilter("choose_group"), state="student_main")
 
     # schedule
     dp.register_message_handler(personal_schedule.get_schedule,

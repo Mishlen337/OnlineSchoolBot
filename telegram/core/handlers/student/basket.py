@@ -2,7 +2,7 @@
 from aiogram import types
 from loguru import logger
 from aiogram.dispatcher.storage import FSMContext
-from aiogram.utils.exceptions import MessageCantBeDeleted
+from aiogram.utils.exceptions import MessageCantBeDeleted, MessageToDeleteNotFound
 
 from db.student import order
 from db.student import course
@@ -11,6 +11,8 @@ from db.utils import exceptions
 from core.utils.messages import BASKET_INFO_COURSE
 from core.keyboards.student_keyboards import all_keyboards
 from core.config import bot, config
+
+from core.utils import discount
 
 
 async def get_basket(message: types.Message, state: FSMContext):
@@ -31,7 +33,7 @@ async def get_basket(message: types.Message, state: FSMContext):
                     try:
                         await bot.delete_message(chat_id=message.chat.id, message_id=id["message_id"])
                         break
-                    except MessageCantBeDeleted:
+                    except (MessageCantBeDeleted, MessageToDeleteNotFound):
                         break
         except ConnectionError:
             await message.answer("Упс. Что-то пошло не так")
@@ -39,7 +41,9 @@ async def get_basket(message: types.Message, state: FSMContext):
                              parse_mode='HTML', reply_markup=all_keyboards["menubasket"]())
         course_prices = []
         msg_text = ''
+        total_amount = 0
         for crs in courses_list:
+            total_amount += crs['price'] * 100
             course_prices.append(
                 types.LabeledPrice(
                     label=f"{crs['course_name']} - {crs['package_name']}", amount=crs['price'] * 100))
@@ -52,7 +56,13 @@ async def get_basket(message: types.Message, state: FSMContext):
                 package=crs['package_name'],
                 price=crs['price']
             ) + '\n'
-        msg_text += '<b>Скидка: 10%</b>'
+        discount_amount = discount.get_discount([crs["package_name"] for crs in courses_list])
+        if discount_amount > 0:
+            msg_text += f'<b>Скидка: {discount_amount}% </b>'
+            logger.debug(f"Cкидка: {int(total_amount / 100 * discount_amount)}")
+            course_prices.append(
+                types.LabeledPrice(
+                    label="Cкидка:", amount=(-1) * int(total_amount / 100 * discount_amount)))
         await message.answer(text=msg_text, parse_mode='HTML')
 
         # course_prices.append(types.LabeledPrice(label='Скидка', amount=-100))
@@ -88,11 +98,14 @@ async def checkout_process(pre_checkout_query: types.PreCheckoutQuery):
 async def successful_payment(message: types.Message):
     text = message.successful_payment
     try:
-        basket_content = await order.get_basket_content(message.from_user.id)
+        # basket_content = await order.get_basket_content(message.from_user.id)
         await order.purchase_basket(message.from_user.id)
         await message.answer(f"Оплата на сумму {text.total_amount // 100} {text.currency} прошла успешно",
                              parse_mode='HTML', reply_markup=all_keyboards["menu"]())
+        await message.answer("Вы можете присоединиться в группу по курсу в телеграмме. (Ссылки находятся в разделе <b>Материалы</b>)",
+                             parse_mode="HTML")
 
+        """
         for order_course_package in basket_content:
             if order_course_package["package_name"] == 'про':
                 await message.answer(
@@ -100,6 +113,7 @@ async def successful_payment(message: types.Message):
                     parse_mode="HTML",
                     reply_markup=await all_keyboards["choose_course_groups"](
                         message.from_user.id, order_course_package["course_id"]))
+        """
     except exceptions.ConnectionError:
         await message.answer("Упс. Что-то пошло не так")
 
@@ -115,6 +129,7 @@ async def clear_basket(message: types.Message):
         await message.answer("Корзина очищена", reply_markup=all_keyboards["menu"]())
     except exceptions.ConnectionError:
         await message.answer("Упс. Что-то пошло не так")
+
 
 async def choose_group(callback: types.CallbackQuery):
     logger.debug(f"Student {callback.from_user} chose group.")

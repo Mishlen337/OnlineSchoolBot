@@ -51,6 +51,7 @@ SCHEDULE_INFO_GROUP_LESSONS = '''
 INFO_WEBINAR_COURSE_MATERIALS = '''
 Курс: <b>{course_name}</b>
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
+Ссылка на группу: <b>{tg_group_link}</b>
 '''
 
 INFO_WEBINARS_ONLINE = '''
@@ -90,6 +91,7 @@ INFO_PERSONAL_TEACHERS = '''
 INFO_GROUP_COURSE_MATERIALS = '''
 Курс: <b>{course_name}</b>
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
+Ссылка на группу: <b>{tg_group_link}</b>
 '''
 
 INFO_GROUP_LESSONS = '''

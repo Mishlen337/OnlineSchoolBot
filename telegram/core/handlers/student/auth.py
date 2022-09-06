@@ -50,7 +50,7 @@ async def get_fio(message: types.Message, state: FSMContext):
     logger.debug(f"Student {message.from_user} shared his fio.")
     try:
         surname, name, patronymic = message.text.split(" ")
-        await user.fio_init(message.from_user.id, surname, name, patronymic)
+        await user.fio_init(message.from_user.id, name, patronymic, surname)
         await state.set_state("student_class_num")
         await message.answer(
             "Введите ваш класс (1..11) или введите <b>окончил</b>, если вы уже окончили школу.",

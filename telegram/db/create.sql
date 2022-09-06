@@ -152,8 +152,9 @@ create table if not exists packages (
     description text
 );
 
-insert into packages values ('про');
-insert into packages values ('стандарт');
+insert into packages values ('Based');
+insert into packages values ('Групповой');
+insert into packages values ('Индивидуальный')
 
 create table if not exists course_package (
     course_id integer not null CONSTRAINT fk_course references courses(id) on delete restrict,
@@ -552,7 +553,7 @@ BEGIN
         join order_course_package as ocp on c.id = ocp.course_id
         join orders as o on ocp.order_id = o.id
     where o.status = 'оплачено' and o.student_id = new.student_id and
-          g.id = new.group_id and ocp.package_name = 'про' into course_pro_purchase;
+          g.id = new.group_id and ocp.package_name = 'Групповой' into course_pro_purchase;
     IF course_pro_purchase = 0 then
         RAISE exception 'student is not allowed to be in this group' USING ERRCODE = '09000';
         return null;

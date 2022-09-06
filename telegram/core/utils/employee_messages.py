@@ -49,7 +49,6 @@ HOMEWORKS_WEBINARS_ONLINE = '''
 HOMEWORKS_WEBINARS_RECORD = '''
 Курс: <b>{course_name}</b>
 Тема: <b>{theme}</b>
-Предмет: <b>{subject_name}</b>
 Формат: <b>{format}</b>
 Ссылка на дз: <b>{homework_link}</b>
 Ученик: <b>{student_surname} {student_name} {student_patronymic} - {tg_username}</b>

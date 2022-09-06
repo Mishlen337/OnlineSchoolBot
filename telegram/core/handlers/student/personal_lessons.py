@@ -8,6 +8,7 @@ from core.utils.messages import TUTOR_MESSAGE
 from core.keyboards.student_keyboards import all_keyboards
 
 from db.student import personal_lesson
+from db.employee import user
 from db.utils import exceptions
 
 """select e.name, e.patronymic, e.surname, es.subject_name, es.individual_price
@@ -67,11 +68,22 @@ async def show_tutor_description(callback: types.CallbackQuery):
 
 
 async def contact_tutor(callback: types.CallbackQuery):
-    teacher_id = callback.data.split(":")[1]
+    teacher_id = int(callback.data.split(":")[1])
     subject_name = callback.data.split(":")[2]
     logger.debug(f"Guest {callback.from_user} chose to contact {teacher_id} {subject_name}")
-    await callback.message.bot.send_message(
-        config.MODERATOR_TG_ID,
-        f"Ученик @{callback.from_user.username} хочет взять урок у employee_id: {teacher_id}, subject_name: {subject_name}")
-    await callback.message.answer(
-        "Спасибо, что выбрали индивидуальное занятие, скоро с вами свяжется преподаватель и согласует удобное время.\n Время занятия появится в рассписании.")
+    try:
+        tg_id = (await user.get_user_tg_id(teacher_id))["tg_id"]
+    except exceptions.ConnectionError:
+        await callback.message.answer("Упс. Что-то пошло не так")
+    if tg_id:
+        if callback.from_user.username:
+            await callback.message.bot.send_message(
+                tg_id,
+                f"Ученик @{callback.from_user.username} хочет взять у вас урок по предмету <b>{subject_name}</b>. Свяжитесь с ним для назначения времени.",
+                parse_mode="HTML")
+            await callback.message.answer("Спасибо, что выбрали индивидуальное занятие, скоро с вами свяжется преподаватель и согласует удобное время.\n Время занятия появится в рассписании.")
+        else:
+            await callback.message.answer("Укажите ваш username в настройках телеграмма, чтобы преподаватель мог с вами связаться.")
+
+    else:
+        await callback.message.answer("Пока с преподавателем неудалось связаться. Попробуйте чуть позже.")

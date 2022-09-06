@@ -72,6 +72,7 @@ async def add_course_groups(kb: InlineKeyboardMarkup, tg_id, course_id: int) -> 
                 callback_data="choose_group:" + str(tg_id) + ":" + str(group["id"])),
         )
 
+
 def add_homework(kb: InlineKeyboardMarkup, tg_id, id: int, tip: str, group_lesson_id=None) -> None:
     kb.add(InlineKeyboardButton(
         text="Сдать ДЗ",

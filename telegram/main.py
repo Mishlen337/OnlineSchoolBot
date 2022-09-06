@@ -8,7 +8,7 @@ from core.config import config
 from core.config import bot, dp
 from core import handlers
 from core import filters
-
+from loguru import logger
 
 app = FastAPI()
 
@@ -33,7 +33,13 @@ async def bot_webhook(update: dict):
     telegram_update = types.Update(**update)
     Dispatcher.set_current(dp)
     Bot.set_current(bot)
-    await dp.process_update(telegram_update)
+    try:
+        await dp.process_update(telegram_update)
+    except Exception as e:
+        await bot.send_message(config.MODERATOR_TG_ID, "EXCEPTION!!!! NEED HEELP!!!")
+        logger.error(e)
+
+    # await dp.process_update(telegram_update)
 
 
 @app.on_event("shutdown")
