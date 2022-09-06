@@ -73,7 +73,7 @@ async def get_basket(message: types.Message, state: FSMContext):
                                               provider_token=config.PAYMENTS_SECRET,
                                               currency='rub',
                                               prices=course_prices,
-                                              payload='pay-course-basket:'+str(message.message_id + 3),
+                                              payload='pay-course-basket:'+str(message.message_id + 4),
                                               start_parameter='basket')
         await order.update_order_course_package_message_ids(tg_id=message.from_user.id,
                                                             message_id=send_message.message_id)
