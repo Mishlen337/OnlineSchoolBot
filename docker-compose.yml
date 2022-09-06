@@ -39,7 +39,6 @@ services:
       - "${HOST_PORT}:${HOST_PORT}"
     depends_on:
       - postgres
-      - redis
     restart: unless-stopped
 
   pgadmin:
