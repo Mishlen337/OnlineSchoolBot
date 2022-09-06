@@ -6,6 +6,7 @@ from aiogram.dispatcher.storage import FSMContext
 from core.config import config
 from core.utils.messages import TUTOR_MESSAGE
 from core.keyboards.student_keyboards import all_keyboards
+from . handlers_utils import formatting
 
 from db.student import personal_lesson
 from db.employee import user
@@ -29,8 +30,7 @@ async def get_tutors(message: types.Message, state: FSMContext):
                     teacher_name=teacher['teacher_name'],
                     teacher_patronymic=teacher['teacher_patronymic'] if teacher['teacher_patronymic'] != None else '',
                     teacher_surname=teacher['teacher_surname'],
-                    subject_name=teacher['subject_name'],
-                    price=teacher['price']
+                    subject_name=teacher['subject_name']
                 )
                 await message.answer(
                     msg_text,
@@ -61,9 +61,17 @@ async def show_tutor_description(callback: types.CallbackQuery):
     except exceptions.ConnectionError:
         await callback.answer("Упс. Что-то пошло не так")
         return
-    text = callback.message.text + description
+    text_list = callback.message.text.split('\n')
+    text = ''
+    for i in range(2):
+        text += formatting(text_list[i])
+    if len(text_list) != 2:
+        text += '<b>'
+        for i in range(2, len(text_list)):
+            text += text_list[i] + '\n'
+        text += '</b>'
     await callback.message.edit_text(
-        text, parse_mode='HTML',
+        f"{text}\n{description}", parse_mode='HTML',
         reply_markup=all_keyboards["personal_select_without_desc"](teacher_id, subject_name))
 
 

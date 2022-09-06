@@ -1,7 +1,6 @@
 """Module to declare message templates."""
 TUTOR_MESSAGE = '''Предмет: <b>{subject_name}</b>
 Преподаватель: <b>{teacher_surname} {teacher_name} {teacher_patronymic}</b>
-Цена занятия: <b>{price}</b>
 '''
 
 SELECT_INFO_COURSE = '''Курс: <b>{course_name}</b>
