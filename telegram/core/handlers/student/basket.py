@@ -37,6 +37,7 @@ async def get_basket(message: types.Message, state: FSMContext):
                         break
         except ConnectionError:
             await message.answer("Упс. Что-то пошло не так")
+        await message.answer("Оплачивая корзину, вы подтверждаете условие оферты. Условия оферты можно посмотреть по команде /terms.")
         await message.answer("Курсы в корзине: ",
                              parse_mode='HTML', reply_markup=all_keyboards["menubasket"]())
         course_prices = []
