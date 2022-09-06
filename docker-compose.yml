@@ -16,6 +16,14 @@ services:
       - ${DB_PATH}/postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
   
+  redis:
+    image: 'bitnami/redis:latest'
+    env_file:
+      - .env
+    volumes:
+      - ${REDIS_PATH}:/bitnami/redis/data
+    restart: unless-stopped
+
   bot:
     container_name: ege_bot
     build:
@@ -29,6 +37,7 @@ services:
       - "${HOST_PORT}:${HOST_PORT}"
     depends_on:
       - postgres
+      - redis
     restart: unless-stopped
 
   pgadmin:
