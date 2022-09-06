@@ -15,14 +15,16 @@ services:
       - ./telegram/db/create.sql:/docker-entrypoint-initdb.d/create.sql
       - ${DB_PATH}/postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-  
-  redis:
-    image: 'bitnami/redis:latest'
-    env_file:
-      - .env
-    volumes:
-      - ${REDIS_PATH}:/bitnami/redis/data/
-    restart: unless-stopped
+
+
+  # redis:
+  #   image: 'bitnami/redis:latest'
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ${REDIS_PATH}:/bitnami/redis/data/
+  #   restart: unless-stopped
+
 
   bot:
     container_name: ege_bot
