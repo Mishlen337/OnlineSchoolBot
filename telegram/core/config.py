@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: str
     REDIS_DB: int
-    REDIS_PASSWORD: str
+    # REDIS_PASSWORD: str
 
     class Config:
         env_file = "../.env"
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
 config = Settings()
 
-storage = RedisStorage2(config.REDIS_HOST, config.REDIS_PORT, config.REDIS_DB, config.REDIS_PASSWORD)
+storage = RedisStorage2(config.REDIS_HOST, config.REDIS_PORT, config.REDIS_DB)
 # storage = MemoryStorage()
 bot = Bot(token=config.TELEGRAM_SECRET)
 dp = Dispatcher(bot, storage=storage)
