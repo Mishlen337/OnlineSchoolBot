@@ -17,13 +17,13 @@ services:
     restart: unless-stopped
 
 
-  # redis:
-  #   image: 'bitnami/redis:latest'
-  #   env_file:
-  #     - .env
-  #   volumes:
-  #     - ${REDIS_PATH}:/bitnami/redis/data/
-  #   restart: unless-stopped
+  redis:
+    image: 'redis'
+    env_file:
+      - .env
+    volumes:
+      - ${REDIS_PATH}:/data
+    restart: unless-stopped
 
 
   bot:
