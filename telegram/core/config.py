@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
 config = Settings()
 
-#storage = RedisStorage2(config.REDIS_HOST, config.REDIS_PORT, config.REDIS_DB, config.REDIS_PASSWORD)
-storage = MemoryStorage()
+storage = RedisStorage2(config.REDIS_HOST, config.REDIS_PORT, config.REDIS_DB, config.REDIS_PASSWORD)
+# storage = MemoryStorage()
 bot = Bot(token=config.TELEGRAM_SECRET)
 dp = Dispatcher(bot, storage=storage)
