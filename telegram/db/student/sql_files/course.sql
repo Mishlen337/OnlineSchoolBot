@@ -16,7 +16,8 @@ from
             join orders as o on ocp.order_id = o.id
             join students as s on o.student_id = s.id
             where s.tg_id = :tg_id) as filt_o
-  on c.id = filt_o.course_id;
+  on c.id = filt_o.course_id
+order by c.name;
 
 --name: get_course_packages
 select
@@ -24,7 +25,8 @@ select
 from
   course_package
 where
-  course_id = :course_id;
+  course_id = :course_id
+order by price;
 
 --name: get_purchased_courses
 select c.id, c.name from
