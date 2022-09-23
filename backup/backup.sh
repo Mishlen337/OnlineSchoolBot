@@ -5,8 +5,8 @@ OUTPUT_FILE=${BACKUP_DIR}/${FILE}
 
 mkdir -p ${BACKUP_DIR}
 
-ssh -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes -f -L 1111:localhost:${DB_PORT} ${SSH_USERNAME}@${SSH_HOST} sleep 10
-PGPASSWORD=${SSH_DB_PASSWORD} pg_dump -c -h localhost --port 1111 -U ${DB_USER} ${DB_NAME} -F p -f ${OUTPUT_FILE}
+ssh -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes -f -L 1111:localhost:${SSH_POSTGRES_PORT} ${SSH_USERNAME}@${SSH_HOST} sleep 10
+PGPASSWORD=${SSH_POSTGRES_PASSWORD} pg_dump -c -h localhost --port 1111 -U ${SSH_POSTGRES_USER} -d ${SSH_POSTGRES_DB} -F p -f ${OUTPUT_FILE}
 
 gzip $OUTPUT_FILE
 
