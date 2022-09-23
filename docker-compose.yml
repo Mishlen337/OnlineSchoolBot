@@ -14,6 +14,8 @@ services:
     volumes:
       - ./telegram/db/create.sql:/docker-entrypoint-initdb.d/create.sql
       - ${DB_PATH}/postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
     restart: unless-stopped
 
 
