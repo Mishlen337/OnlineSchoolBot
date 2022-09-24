@@ -1,1 +1,1 @@
-0 0 * * * [write sh full path] > [write sh full path]/logs.txt
+0 0 * * * source [dir path]/.env && [dir path]/backup/backup.sh > ~/backups_logs.log
