@@ -2,17 +2,19 @@
 import uvicorn
 
 from aiogram import types, Dispatcher, Bot
+from aiogram.utils.exceptions import ChatNotFound
 from fastapi import FastAPI
 
-from core.config import config
-from core.config import bot, dp
-from core import handlers
-from core import filters
+from core.config import config, bot, dp
+from core import handlers, filters
+from db.student import user
+from db.utils import exceptions
 from loguru import logger
 
 app = FastAPI()
 
 WEBHOK_PATH = "/bot"
+NOTIFICATION_PATH = "/notification"
 
 
 @app.on_event("startup")
@@ -40,6 +42,38 @@ async def bot_webhook(update: dict):
         logger.error(e)
 
     # await dp.process_update(telegram_update)
+
+
+@app.post(NOTIFICATION_PATH)
+async def bot_notification(notification: dict):
+    """Send notification to all students or to particular student
+
+    Args:
+        notification (dict): notification message
+
+    dict keys:
+        token
+        message with parse mode - HTML
+        users - list of tg_usernames, tg_user_ids or all
+    """
+    logger.debug(notification)
+    if notification["token"] != config.NOTIFICATION_TOKEN:
+        return {"message": "wrong notification token"}, 403
+
+    logger.debug(f"Sending notification - {notification}")
+
+    if notification["users"] == "all":
+        try:
+            students = await user.get_all_users()
+            for st in students:
+                try:
+                    await bot.send_message(st["tg_id"], notification["message"], parse_mode="HTML")
+                    logger.debug(f"Message was sent to {st}")
+                except ChatNotFound:
+                    logger.debug(f"Couldn't sent message to {st} not found")
+            return {"message": "ok"}, 200
+        except exceptions.ConnectionError:
+            return {"message": "internal error"}, 500
 
 
 @app.on_event("shutdown")
