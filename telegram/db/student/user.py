@@ -82,3 +82,17 @@ async def get_user_info(tg_id):
         if conn:
             await conn.close()
         raise exceptions.ConnectionError()
+
+
+async def get_all_users():
+    conn = None
+    query = aiosql.from_path("./telegram/db/student/sql_files/user.sql", driver_adapter="asyncpg")
+    try:
+        conn = await asyncpg.connect(config.DB_URI)
+        result = await query.get_all_users(conn)
+        await conn.close()
+        return result
+    except (asyncpg.PostgresConnectionError, OSError):
+        if conn:
+            await conn.close()
+        raise exceptions.ConnectionError()

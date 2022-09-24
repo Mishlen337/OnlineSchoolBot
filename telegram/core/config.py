@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: str
     REDIS_DB: int
+
+    NOTIFICATION_TOKEN: str
     # REDIS_PASSWORD: str
 
     class Config:

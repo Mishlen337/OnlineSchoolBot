@@ -24,3 +24,6 @@ limit 1;
 
 --name: get_user_info^
 select * from students where tg_id = :tg_id;
+
+--name: get_all_users
+select * from students;
