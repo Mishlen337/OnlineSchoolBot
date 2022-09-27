@@ -3,7 +3,9 @@ import uvicorn
 
 from aiogram import types, Dispatcher, Bot
 from aiogram.utils.exceptions import ChatNotFound
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, Form
+
+from typing import Optional
 
 from core.config import config, bot, dp
 from core import handlers, filters
@@ -45,33 +47,45 @@ async def bot_webhook(update: dict):
 
 
 @app.post(NOTIFICATION_PATH)
-async def bot_notification(notification: dict):
+async def bot_notification(token: str = Form(),
+                           message: str = Form(),
+                           image: Optional[UploadFile] = File(None, media_type="image/jpeg"),
+                           users: str = Form()):
     """Send notification to all students or to particular student
 
     Args:
-        notification (dict): notification message
-
-    dict keys:
-        token
-        message with parse mode - HTML
-        users - list of tg_usernames, tg_user_ids or all
+        request (Request): request object
+        properties (dict): notification message
     """
-    logger.debug(notification)
-    if notification["token"] != config.NOTIFICATION_TOKEN:
+    if token != config.NOTIFICATION_TOKEN:
         return {"message": "wrong notification token"}, 403
 
-    logger.debug(f"Sending notification - {notification}")
+    logger.debug(f"Sending notification - {message}")
 
-    if notification["users"] == "all":
+    if users == "all":
         try:
             students = await user.get_all_users()
-            for st in students:
-                try:
-                    await bot.send_message(st["tg_id"], notification["message"], parse_mode="HTML")
-                    logger.debug(f"Message was sent to {st}")
-                except ChatNotFound:
-                    logger.debug(f"Couldn't sent message to {st} not found")
-            return {"message": "ok"}, 200
+            if image:
+                for st in students:
+                    try:
+                        await bot.send_photo(chat_id=st["tg_id"],
+                                             photo=image.file.read(),
+                                             caption=message,
+                                             parse_mode="HTML")
+                        logger.debug(f"Image with caption was sent to {st}")
+                    except ChatNotFound:
+                        logger.debug(f"Couldn't sent image with caption to {st} not found")
+                return {"message": "ok"}, 200
+            else:
+                for st in students:
+                    try:
+                        await bot.send_message(chat_id=st["tg_id"],
+                                               text=message,
+                                               parse_mode="HTML")
+                        logger.debug(f"Message was sent to {st}")
+                    except ChatNotFound:
+                        logger.debug(f"Couldn't sent message to {st} not found")
+                return {"message": "ok"}, 200
         except exceptions.ConnectionError:
             return {"message": "internal error"}, 500
 
