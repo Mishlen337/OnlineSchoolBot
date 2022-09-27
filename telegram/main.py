@@ -69,7 +69,7 @@ async def bot_notification(token: str = Form(),
                 for st in students:
                     try:
                         await bot.send_photo(chat_id=st["tg_id"],
-                                             photo=image.file.read(),
+                                             photo=await image.read(),
                                              caption=message,
                                              parse_mode="HTML")
                         logger.debug(f"Image with caption was sent to {st}")
